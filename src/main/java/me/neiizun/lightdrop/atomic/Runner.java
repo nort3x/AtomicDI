@@ -1,15 +1,15 @@
-package me.neiizun.lightdrop.registion;
+package me.neiizun.lightdrop.atomic;
 
-import me.neiizun.lightdrop.LightDrop;
-import me.neiizun.lightdrop.command.Command;
+import me.neiizun.lightdrop.lightdrop.LightDrop;
+import me.neiizun.lightdrop.atomic.registion.BotProvider;
+import me.neiizun.lightdrop.atomic.anonation.CommandCluster;
 import org.reflections8.Reflections;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class Runner {
-    public static final void load(Class<?> mainClassEntry,BotProvider[] botNamesAndJDA , String... args) {
+    public static final void load(Class<?> mainClassEntry, BotProvider[] botNamesAndJDA , String... args) {
 
         Collection<Class<?>> commandBeans = new Reflections(mainClassEntry).getTypesAnnotatedWith(CommandCluster.class);
         commandBeans.parallelStream().forEach(Runner::scanAndGraph);

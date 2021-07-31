@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.command;
+package me.neiizun.lightdrop.atomic.anonation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@AtomicMethod
 public @interface Command {
     /**
      * Name of the command (use "." to specify sub commands).

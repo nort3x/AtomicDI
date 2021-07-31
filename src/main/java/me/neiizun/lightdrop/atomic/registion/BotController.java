@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.registion;
+package me.neiizun.lightdrop.atomic.registion;
 
 import net.dv8tion.jda.api.JDA;
 

@@ -1,15 +1,15 @@
-package me.neiizun.lightdrop.registion;
+package me.neiizun.lightdrop.atomic.anonation;
 
 
 import java.lang.annotation.*;
 
 
 /**
- * use this anotation on classes containing commands for scanner
+ * use this annotation on classes containing {@link Command} for being scanned
  */
-@Target(ElementType.TYPE)
 @Documented
 @Inherited
+@Atomic
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CommandCluster {
     String forBot();

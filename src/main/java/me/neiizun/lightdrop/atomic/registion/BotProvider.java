@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.registion;
+package me.neiizun.lightdrop.atomic.registion;
 
 public interface BotProvider {
     BotController getBotInstance();
