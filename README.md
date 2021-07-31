@@ -1,82 +1,15 @@
 # ? LightDrop
 
-LightDrop is a lightweight library that allows you to create decorator-based commands with <a href="https://github.com/DV8FromTheWorld/JDA">JDA</a>.
+LightDropAtomic is a seperated conitnuation of [original repo](https://github.com/NeiiZun/LightDrop) after code casting at [this commit](https://github.com/NeiiZun/LightDrop/commit/ebb5e25a0ccdf2b966f12283b21bf14fb5c34f1e)
+in this continuation i will provide classical IoC approach for managing multiple bots concurrently with extra features
 
 ## Features
 
 <ul>
-    <li>Creating commands in a method.</li>
-    <li>Adding permissions and permission message.</li>
-    <li>Catch exceptions from commands.</li>
-    <li>Adding global filters to the command's middleware.</li>
+    <li>Metrics and Database integrations</li>
+    <li>Modular Bean system</li>
+    <li>Dependency Injection</li>
+    <li>Configuration Systems and policies</li>
+    <li>LighDropAtomic Bot-SDK</li>
 </ul>
 
-## Installation
-
-### With maven
-
-```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-```
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>me.neiizun</groupId>
-        <artifactId>LightDrop</artifactId>
-        <version>latest</version> <!--Replace with the latest version.-->
-    </dependency>
-</dependencies>
-```
-
-### With gradle
-
-```groovy
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-```
-
-```groovy
-repositories {
-    dependencies {
-        implementation 'com.github.NeiiZun:LightDrop:latest' // Replace with the latest version.
-    }
-}
-```
-## Usage
-
-### Hook LightDrop
-
-```java
-JDA jda = JDABuilder.createDefault("your token").build();
-        
-new LightDrop().hook(jda);
-```
-
-### Create your first command
-
-```java
-public class MyCommand {
-    @me.neiizun.test.Command(name = "mycommand")
-    public void myCommand(CommandContext context) {
-        context.getChannel().sendMessage("Hello " + context.getAuthor().getName()).complete();
-    }
-}
-```
-
-```java 
-JDA jda = JDABuilder.createDefault("your token").build();
-        
-new LightDrop().hook(jda)
-    .map(new MyCommand());
-```
-
-![](images/img1.png)
-
-### Full documentation available <a href="https://neiizun.gitbook.io/lightdrop/">here</a>
