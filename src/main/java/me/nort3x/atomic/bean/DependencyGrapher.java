@@ -18,7 +18,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DependencyGrapher {
 
@@ -72,9 +74,10 @@ public class DependencyGrapher {
     private  void makeConstructors(Collection<Class<?>> clazzes) {
         clazzes.parallelStream().forEach(x -> {
             Optional<Constructor<?>> con = ReflectionUtils.getNoArgsConstructor(x);
-            con.ifPresentOrElse(
-                    xx -> allConstructors.putIfAbsent(x, xx),
-                    () -> LoggerFactory.getLogger(DependencyGrapher.class).warn("Atomic types should contain No-Args-Construct but " + x.getName() + " does not!, this can lead to Undefined Behavior"));
+            if(con.isPresent())
+                allConstructors.putIfAbsent(x,con.get());
+            else
+                LoggerFactory.getLogger(DependencyGrapher.class).warn("Atomic types should contain No-Args-Construct but " + x.getName() + " does not!, this can lead to Undefined Behavior");
         });
     }
 
@@ -155,7 +158,7 @@ public class DependencyGrapher {
     public <T> List<T> getAllAtomicInstancesDerivedFrom(Class<T> clazz) {
         return getAllAtomicDerivedFrom(clazz).stream()
                 .map(x->getFactoryOf(x).generate())
-                .flatMap(Optional::stream)
+                .flatMap((Function<Optional<?>, Stream<?>>) o ->  o.isPresent()? Stream.of(o.get()): Stream.empty())
                 .map(x->(T) x)
                 .collect(Collectors.toList());
     }
