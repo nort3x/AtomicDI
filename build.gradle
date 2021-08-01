@@ -1,8 +1,8 @@
 plugins {
     id 'java'
-    id 'java-library'
-    id 'maven-publish'
 }
+
+apply plugin: 'maven'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
@@ -18,15 +18,10 @@ repositories {
 }
 
 
-configurations {
-    jarShaded
-}
-
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
-//    implementation 'com.github.nort3x:atomicdi:0.0.0-alpha.0'
-    jarShaded implementation('net.oneandone.reflections8:reflections8:0.11.5')
+    implementation 'net.oneandone.reflections8:reflections8:0.11.5'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
@@ -37,9 +32,23 @@ test {
     useJUnitPlatform()
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
 
-jar {
-    from {
-        configurations.jarShaded.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+
+wrapper {
+    gradleVersion = "6.1.1"
+    distributionType = Wrapper.DistributionType.ALL
 }
