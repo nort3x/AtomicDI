@@ -1,6 +1,6 @@
-package me.neiizun.lightdrop.atomic.reactor;
+package me.nort3x.atomic.reactor;
 
-import me.neiizun.lightdrop.atomic.bean.DependencyGrapher;
+import me.nort3x.atomic.bean.DependencyGrapher;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
@@ -10,9 +10,9 @@ import java.util.function.Consumer;
 
 public class Factory<T> implements ReactorLike<T>{
     private final Constructor<T> constructor;
-    LinearReactor<T> recPre = new LinearReactor<>();
-    ParallelReactor<T> recInter = new ParallelReactor<>();
-    LinearReactor<T> recPost = new LinearReactor<>();
+    private final LinearReactor<T> recPre = new LinearReactor<>();
+    private final ParallelReactor<T> recInter = new ParallelReactor<>();
+    private final LinearReactor<T> recPost = new LinearReactor<>();
 
     public Factory(Constructor<T> constructor){
         this.constructor = constructor;

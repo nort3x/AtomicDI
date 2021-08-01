@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.atomic.reactor;
+package me.nort3x.atomic.reactor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +30,8 @@ import java.util.function.Consumer;
  * @author H.ardaki
  */
 public class ParallelReactor<T> implements ReactorLike<T>{
-    List<Consumer<T>> reactions = new ArrayList<>();
-    AtomicInteger atomicInteger = new AtomicInteger(0);
+    protected final List<Consumer<T>> reactions = new ArrayList<>();
+    private final AtomicInteger atomicInteger = new AtomicInteger(0);
 
     @Override
     public void addReaction(Consumer<T> reaction){

@@ -1,7 +1,4 @@
-package me.neiizun.lightdrop.atomic.reactor;
-
-import java.lang.annotation.Documented;
-import java.util.function.Consumer;
+package me.nort3x.atomic.reactor;
 
 /**
  {@inheritDoc}

@@ -1,18 +1,18 @@
-package me.neiizun.lightdrop.atomic.bean;
+package me.nort3x.atomic.bean;
 
 import java.lang.annotation.Annotation;
-import java.lang.annotation.Documented;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class ReflectionUtils {
+
+    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics) {
+        GreedyBag.allLoadedAtomic.addAll(atomics);
+    }
 
     // when we scan once we keep it, faster easier!
     private static class GreedyBag{
@@ -22,6 +22,10 @@ public class ReflectionUtils {
 
         private static final ConcurrentHashMap<Class<?>,List<Field>> everyAtomFieldScanned = new ConcurrentHashMap<>();
         private static final ConcurrentHashMap<Class<?>,ConcurrentHashMap<Class<?extends Annotation>,List<Method>>> everyAnnotatedMethodScanned = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<Class<?extends Annotation>,List<Class<?>>> everyAtomicAnnotatedClassScanned = new ConcurrentHashMap<>();
+        private static final ArrayList<Class<?>> allLoadedAtomic = new ArrayList<>();
+        private static final ConcurrentHashMap<Class<?>,List<Class<?>>> everyAtomicDerivedFromKey = new ConcurrentHashMap<>();
+
 
 
     }
@@ -59,12 +63,8 @@ public class ReflectionUtils {
     }
 
     public static List<Method> getMethodsAnnotatedWith(Class<?> src, Class<? extends Annotation> annotation){
-        return GreedyBag.everyAnnotatedMethodScanned.computeIfAbsent(src,x->{
-            return new ConcurrentHashMap<>();
-        }).computeIfAbsent(annotation,an->{
-            return getAllMethodsFor(src).stream().filter(x->x.isAnnotationPresent(annotation))
-                    .collect(Collectors.toList());
-        });
+        return GreedyBag.everyAnnotatedMethodScanned.computeIfAbsent(src,x->new ConcurrentHashMap<>()).computeIfAbsent(annotation,an-> getAllMethodsFor(src).stream().filter(x->x.isAnnotationPresent(annotation))
+                    .collect(Collectors.toList()));
 
     }
 
@@ -72,14 +72,20 @@ public class ReflectionUtils {
         return List.of(clazz.getDeclaredConstructors()).stream().peek(x->x.setAccessible(true)).collect(Collectors.toList());
     }
 
-    private static Method setAccessible(Method m){
+    private static void setAccessible(Method m){
         m.setAccessible(true);
-        return m;
     }
 
-    private static Field setAccessible(Field f){
+    private static void setAccessible(Field f){
         f.setAccessible(true);
-        return f;
+    }
+
+    public static List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation){
+        return GreedyBag.everyAtomicAnnotatedClassScanned.computeIfAbsent(annotation,x-> GreedyBag.allLoadedAtomic.stream().filter(y->y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
+    }
+
+    public static List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz){
+        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz,x-> GreedyBag.allLoadedAtomic.stream().filter(clazz::isAssignableFrom).collect(Collectors.toList()));
     }
 
 }
