@@ -1,11 +1,11 @@
 package test1.dummy;
 
-import me.neiizun.lightdrop.atomic.anonation.Atom;
-import me.neiizun.lightdrop.atomic.anonation.Atomic;
-import me.neiizun.lightdrop.atomic.anonation.PostConstruction;
+import me.nort3x.atomic.annotation.Atom;
+import me.nort3x.atomic.annotation.Atomic;
+import me.nort3x.atomic.annotation.PostConstruction;
 
 @Atomic
-public class DependancyLike {
+public class DependencyLike {
 
     @Atom(type = Atom.Type.Shared) Dependency2 dependency2;
 

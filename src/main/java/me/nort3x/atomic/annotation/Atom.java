@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.atomic.anonation;
+package me.nort3x.atomic.annotation;
 
 import java.lang.annotation.*;
 
@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 /**
  * <h2>Atom</h2>
  * Atom force scanner to provide annotated field at runtime
- * <blackqoute>
+ * <blackout>
  *     <pre>
  *         <code>
  *
@@ -19,9 +19,9 @@ import java.lang.annotation.*;
  *           }
  *         </code>
  *     </pre>
- * </blackqoute>
+ * </blackout>
  *
- * @see
+ * @see Atomic
  */
 @Documented
 @Inherited

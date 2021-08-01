@@ -1,4 +1,4 @@
-package me.neiizun.lightdrop.atomic.anonation;
+package me.nort3x.atomic.annotation;
 
 
 import java.lang.annotation.*;
