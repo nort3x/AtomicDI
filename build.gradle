@@ -2,6 +2,9 @@ plugins {
     id 'java'
 }
 
+sourceCompatibility = JavaVersion.VERSION_15
+targetCompatibility = JavaVersion.VERSION_15
+
 group 'me.nort3x'
 version '0.0.0'
 
@@ -13,13 +16,14 @@ repositories {
 }
 
 
-    configurations {
+configurations {
     jarShaded
 }
 
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.30'
     implementation 'org.slf4j:slf4j-simple:1.7.30'
+//    implementation 'com.github.nort3x:atomicdi:0.0.0-alpha.0'
     jarShaded implementation('net.oneandone.reflections8:reflections8:0.11.5')
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
@@ -30,7 +34,6 @@ dependencies {
 test {
     useJUnitPlatform()
 }
-
 
 
 jar {
