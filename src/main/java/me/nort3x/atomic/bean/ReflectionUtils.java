@@ -1,6 +1,7 @@
 package me.nort3x.atomic.bean;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -32,24 +33,24 @@ public class ReflectionUtils {
 
 
     public static List<Method> getAllMethodsFor(Class<?> clazz){
-        return GreedyBag.everyMethodScanned.computeIfAbsent(clazz, x-> List.of(x.getDeclaredMethods()))
+        return GreedyBag.everyMethodScanned.computeIfAbsent(clazz, x-> Arrays.asList(x.getDeclaredMethods()))
                 .stream().peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
     @Deprecated
     public static List<Method> getAccessibleMethodsFor(Class<?> clazz,Object callerInstance){
-        return List.of(clazz.getDeclaredMethods()).stream().filter(x->x.canAccess(callerInstance)).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredMethods()).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
 
     public static List<Field> getAllFieldsFor(Class<?> clazz){
-        return GreedyBag.everyFieldScanned.computeIfAbsent(clazz, x-> List.of(x.getDeclaredFields()))
+        return GreedyBag.everyFieldScanned.computeIfAbsent(clazz, x-> Arrays.asList(x.getDeclaredFields()))
                 .stream().peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
     @Deprecated
     public static List<Field> getAccessibleFieldsFor(Class<?> clazz,Object callerInstance){
-        return List.of(clazz.getDeclaredFields()).stream().filter(x->x.canAccess(callerInstance)).collect(Collectors.toList());
+        return Arrays.asList(clazz.getDeclaredFields()).stream().filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
     public static Optional<Constructor<?>> getNoArgsConstructor(Class<?> clazz) {
@@ -69,7 +70,7 @@ public class ReflectionUtils {
     }
 
     public static List<Constructor<?>> getAllConstructors(Class<?> clazz) {
-        return List.of(clazz.getDeclaredConstructors()).stream().peek(x->x.setAccessible(true)).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredConstructors()).peek(x->x.setAccessible(true)).collect(Collectors.toList());
     }
 
     private static void setAccessible(Method m){
