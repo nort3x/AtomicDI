@@ -54,7 +54,7 @@ public class ReflectionUtils {
 
     public static Optional<Constructor<?>> getNoArgsConstructor(Class<?> clazz) {
         try {
-            var constructor = clazz.getConstructor();
+            Constructor<?> constructor = clazz.getConstructor();
             constructor.setAccessible(true);
             return Optional.of(constructor);
         } catch (NoSuchMethodException e) {

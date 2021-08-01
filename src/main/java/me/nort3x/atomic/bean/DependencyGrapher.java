@@ -71,7 +71,7 @@ public class DependencyGrapher {
 
     private  void makeConstructors(Collection<Class<?>> clazzes) {
         clazzes.parallelStream().forEach(x -> {
-            var con = ReflectionUtils.getNoArgsConstructor(x);
+            Optional<Constructor<?>> con = ReflectionUtils.getNoArgsConstructor(x);
             con.ifPresentOrElse(
                     xx -> allConstructors.putIfAbsent(x, xx),
                     () -> LoggerFactory.getLogger(DependencyGrapher.class).warn("Atomic types should contain No-Args-Construct but " + x.getName() + " does not!, this can lead to Undefined Behavior"));
@@ -99,29 +99,38 @@ public class DependencyGrapher {
 
     private  void provideRequestedFieldFor(Object forWhom, Field fromWhere) {
         try {
-            fromWhere.set(forWhom,switch(atomFieldsType.computeIfAbsent(fromWhere,x->x.getAnnotation(Atom.class).type())){
-                case Shared -> instancesOfSharedFields.computeIfAbsent(fromWhere, x->{
+            Optional<Object> o;
+            switch(atomFieldsType.computeIfAbsent(fromWhere,x->x.getAnnotation(Atom.class).type())){
+                case Shared:
+                   o = Optional.ofNullable(instancesOfSharedFields.computeIfAbsent(fromWhere, x -> {
+                       try {
+                           Class<?> s = x.getType();
+                           return allConstructors.get(s).newInstance();
+                       } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                           scream(x.getClass());
+                           return null;
+                       }
+                   }));
+                case Unique :
                     try {
-                        Class<?> s = x.getType();
-                        return  allConstructors.get(s).newInstance();
+                        o = Optional.of(allConstructors.get(fromWhere.getType()).newInstance());
                     } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        scream(x.getClass());
-                        return   null;
-                    }
-                });
-                case Unique -> {
-                    try {
-                        yield allConstructors.get(fromWhere.getType()).newInstance();
-                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                        o = Optional.empty();
                         e.printStackTrace();
-                        yield null;
+                        scream(allConstructors.get(fromWhere.getType()).getDeclaringClass());
                     }
+                    break;
+                default:
+                    o = Optional.empty();
                 }
-            });
+
+            if(o.isPresent())
+                fromWhere.set(forWhom,o.get());
+
         } catch (IllegalAccessException e) {
-            LoggerFactory.getLogger(DependencyGrapher.class).error("you are facing a bug please report this at: https://github.com/nort3x/LighDropAtomic ", e);
+            LoggerFactory.getLogger(DependencyGrapher.class).error("you are facing a bug please report this at: https://github.com/nort3x/AtomicDI ", e);
         }
-    }
+}
 
     private  List<Field> getListOfRequestedFields(Class<?> clazz) {
         return ReflectionUtils.getAllFieldsFor(clazz).stream().filter(x -> x.isAnnotationPresent(Atom.class)).collect(Collectors.toList());
