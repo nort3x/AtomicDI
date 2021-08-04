@@ -22,7 +22,7 @@ allprojects {
 Step 2. Add the dependency
 ```gradle
 dependencies {
-	implementation 'com.github.nort3x:AtomicDI:0.0.0-alpha.0'
+	implementation 'com.github.nort3x:AtomicDI:bet-null'
 }
 ```
 
