@@ -7,25 +7,43 @@ it provides some convenient features and tools especially designed to simplify I
 
 ## Installation
 
-
+### gradle
 Add it in your root build.gradle at the end of repositories: (if not already!)
 
 ```gradle
 allprojects {
-	repositories {
-		...
-		maven { url 'https://jitpack.io' }
-	}
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
 }
 
 ```
 Step 2. Add the dependency
 ```gradle
 dependencies {
-	implementation 'com.github.nort3x:AtomicDI:bet-null'
+    implementation 'com.github.nort3x:AtomicDI:bet-null'
 }
 ```
 
+### maven
+Step 1. Add the JitPack repository to your build file (if not already!)
+
+```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+```
+Step 2. Add the dependency
+```xml
+<dependency>
+    <groupId>com.github.nort3x</groupId>
+    <artifactId>AtomicDI</artifactId>
+    <version>bet-null</version>
+</dependency>
+```
 
 ## Features
 <ul>
