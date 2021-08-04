@@ -8,8 +8,26 @@ import java.util.function.Consumer;
 /**
  * <h2>ParallelReactor</h2>
  * this class can hold operations and parallel invoke those operations on given object
- * @version 0.0.0
+ *
+ * <h3>LifeCycle</h3>
+ *
+ * <ul>
+ *     <li>
+ *         init()
+ *     </li>
+ *     <li>
+ *          addReaction(...)
+ *     </li>
+ *     <li>
+ *           sealReactor()
+ *       </li>
+ *       <li>
+ *           actOn(....)
+ *       </li>
+ *       </ul>
+ *
  * @author H.ardaki
+ * @version 0.0.0
  */
 public class ParallelReactor<T> implements ReactorLike<T>{
     protected final List<Consumer<T>> reactions = new ArrayList<>();

@@ -1,26 +1,23 @@
 plugins {
     id 'java'
 }
-
+allprojects {
+    repositories {
+        maven { url "https://jitpack.io" }
+        mavenCentral()
+    }
+}
 apply plugin: 'maven'
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 group 'me.nort3x'
-version '0.0.0'
+version '1.0.0'
 
-repositories {
-    mavenCentral()
-    maven { url 'https://mvnrepository.com/artifact/org.apache.commons/commons-lang3' }
-    maven { url 'https://mvnrepository.com/artifact/org.slf4j/slf4j-jdk14' }
-    maven { url 'https://jitpack.io' }
-}
 
 
 dependencies {
-    implementation 'org.slf4j:slf4j-api:1.7.30'
-    implementation 'org.slf4j:slf4j-simple:1.7.30'
     implementation 'net.oneandone.reflections8:reflections8:0.11.5'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'

@@ -7,7 +7,8 @@ import me.nort3x.atomic.annotation.PostConstruction;
 @Atomic
 public class DependencyLike {
 
-    @Atom(type = Atom.Type.Shared) Dependency2 dependency2;
+    @Atom(concreteType = Dependency2.class)
+    Dependency2 dependency2;
 
     public int getInt(){
         return dependency2.getHisInt();

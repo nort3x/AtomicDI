@@ -3,164 +3,200 @@ package me.nort3x.atomic.bean;
 import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.annotation.PostConstruction;
-
+import me.nort3x.atomic.basic.Policy;
+import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.reactor.Factory;
 import me.nort3x.atomic.reactor.ParallelReactor;
 import org.reflections8.Reflections;
-import org.slf4j.LoggerFactory;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+/**
+ * <H3>DependencyGrapher</H3>
+ * this class will organize module scanning system
+ * following life cycle happens after calling {@link DependencyGrapher#graphUsingThisEntryPoint(Class)}
+ * <ul>
+ *
+ *         <li>Grab all {@link Atomic}s</li>
+ *         <li>Check/Generate all {@link Atomic}s no-args-constructors</li>
+ *         <li>Wire dependencies({@link Atom}s) and generate factories</li>
+ *         <li>Apply provided Custom-Polices (see {@link Policy})</li>
+ *
+ * </ul>
+ *
+ * @implNote subclasses should be only accessible via singleton as well
+ */
 public class DependencyGrapher {
 
-    private  final ConcurrentHashMap<Class<?>, Constructor<?>> allConstructors = new ConcurrentHashMap<>();
-    private  final ConcurrentHashMap<Field, Object> instancesOfSharedFields = new ConcurrentHashMap<>();
-    private  final ConcurrentHashMap<Class<?>, Factory<?>> factories = new ConcurrentHashMap<>();
-    private  final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>();
-    private  final ParallelReactor<DependencyGrapher> rules = new ParallelReactor<>();
+    private final HashSet<String> scannablePaths = new HashSet<>();
 
+    // bunch of maps for caching and cutting out jvm lookups , these are references
+    private final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>(); // caching defined type of atom {Shared,Unique,...} avoiding getAnnotation lookup
+    private final ConcurrentHashMap<Field, Class<?>> atomFieldConcreteType = new ConcurrentHashMap<>(); // caching getType lookup
+    private final ConcurrentHashMap<Class<?>, Factory<?>> factories = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Field, Object> instancesOfSharedFields = new ConcurrentHashMap<>();
 
-    private static DependencyGrapher instance;
-    public static DependencyGrapher getInstance(){
-        if(instance ==null)
-            instance = new DependencyGrapher();
-        return instance;
+    // rules will applied parallelized after initialization and scan
+    private final ParallelReactor<Provider> rules = new ParallelReactor<>();
+
+    // restricted API to DependencyGrapher
+    private final Provider provider;
+    private final SafeConstructor safeConstructor;
+
+    // for singleton
+    protected DependencyGrapher() {
+        provider = new Provider(this);
+        safeConstructor = new SafeConstructor();
     }
 
-    private DependencyGrapher(){}
-
-
-
-    public  void graphUsingThisEntryPoint(Class<?> point) {
+    // main method user should call
+    public void graphUsingThisEntryPoint(Class<?> point) {
 
         // get All Atomics
-        Collection<Class<?>> atomics = new Reflections(point).getTypesAnnotatedWith(Atomic.class);
+        Collection<Class<?>> atomics = new Reflections(point, scannablePaths.toArray()).getTypesAnnotatedWith(Atomic.class);
+
 
         ReflectionUtils.loadAllLoadedAtomic(atomics);
         // get All Constructors of Atomics
         makeConstructors(atomics);
         makeFactories(atomics);
         makeRules();
-        rules.actOn(this);
+        rules.actOn(provider);
     }
 
-    public  Factory<?> getFactoryOf(Class<?> clazz){
-        return factories.get(clazz);
+    // generate Constructors for factories
+    private void makeConstructors(Collection<Class<?>> clazzes) {
+        safeConstructor.putNewClasses(clazzes);
     }
 
+    // generate Factories and WireUp
+    private void makeFactories(Collection<Class<?>> atomics) {
+        atomics.parallelStream().forEach(x -> {
+            Optional<Constructor<?>> op = safeConstructor.getConstructor(x);
+            if (op.isPresent()) {
+                // generate factory
+                Factory<?> f = new Factory<>(op.get());
 
-    public  void makeRules(){
-        rules.addReactions(ReflectionUtils.getAllAtomicDerivedFrom(Policy.class).stream().map(x-> {
+                // wire fields
+                getListOfRequestedFields(x).forEach(field -> f.addReaction(o -> provideRequestedFieldFor(o, field)));
+                ReflectionUtils.getMethodsAnnotatedWith(x, PostConstruction.class).stream().findFirst().ifPresent(postConstructor -> f.addPostReaction(obj -> {
+                    try {
+                        postConstructor.invoke(obj);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        AtomicLogger.getInstance().complain_PostConfigurationMethodHasParameter(x, postConstructor);
+                    }
+                }));
+                factories.putIfAbsent(x, f);
+            } else
+                AtomicLogger.getInstance().complain_AtomicNotFound(x);
+        });
+    }
+
+    // parse rules and ready them up for execution
+    private void makeRules() {
+        rules.addReactions(ReflectionUtils.getAllAtomicDerivedFrom(Policy.class).stream().map(x -> {
             try {
                 return (Policy) x.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                scream(x);
+                AtomicLogger.getInstance().complain_NorArgConstructor(x);
                 return null;
             }
         }).filter(Objects::nonNull).collect(Collectors.toList()));
     }
 
-    private  void makeConstructors(Collection<Class<?>> clazzes) {
-        clazzes.parallelStream().forEach(x -> {
-            Optional<Constructor<?>> con = ReflectionUtils.getNoArgsConstructor(x);
-            if(con.isPresent())
-                allConstructors.putIfAbsent(x,con.get());
-            else
-                LoggerFactory.getLogger(DependencyGrapher.class).warn("Atomic types should contain No-Args-Construct but " + x.getName() + " does not!, this can lead to Undefined Behavior");
-        });
-    }
-
-    private  void makeFactories(Collection<Class<?>> atomics) {
-        atomics.parallelStream().forEach(x -> {
-            // generate factory
-            Factory<?> f = new Factory<>(allConstructors.get(x));
-
-            // wire fields
-            getListOfRequestedFields(x).forEach(field -> f.addReaction(o -> provideRequestedFieldFor(o, field)));
-            ReflectionUtils.getMethodsAnnotatedWith(x, PostConstruction.class).stream().findFirst().ifPresent(postConstructor-> f.addPostReaction(obj->{
-                try {
-                    postConstructor.invoke(obj);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    LoggerFactory.getLogger(DependencyGrapher.class).warn("PostConstruction method should be No-Args-method but " + postConstructor.getName() + " is not!, this can lead to Undefined Behavior");
-                }
-            }));
-            factories.putIfAbsent(x,f);
-        });
-    }
-
-
-    private  void provideRequestedFieldFor(Object forWhom, Field fromWhere) {
-        try {
-            Optional<Object> o;
-            switch(atomFieldsType.computeIfAbsent(fromWhere,x->x.getAnnotation(Atom.class).type())){
-                case Shared:
-                   o = Optional.ofNullable(instancesOfSharedFields.computeIfAbsent(fromWhere, x -> {
-                       try {
-                           Class<?> s = x.getType();
-                           return allConstructors.get(s).newInstance();
-                       } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                           scream(x.getClass());
-                           return null;
-                       }
-                   }));
-                case Unique :
-                    try {
-                        o = Optional.of(allConstructors.get(fromWhere.getType()).newInstance());
-                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                        o = Optional.empty();
-                        e.printStackTrace();
-                        scream(allConstructors.get(fromWhere.getType()).getDeclaringClass());
-                    }
-                    break;
-                default:
-                    o = Optional.empty();
-                }
-
-            if(o.isPresent())
-                fromWhere.set(forWhom,o.get());
-
-        } catch (IllegalAccessException e) {
-            LoggerFactory.getLogger(DependencyGrapher.class).error("you are facing a bug please report this at: https://github.com/nort3x/AtomicDI ", e);
-        }
-}
-
-    private  List<Field> getListOfRequestedFields(Class<?> clazz) {
+    // return list of Atom fields of given Atomic only used in makeFactories
+    private List<Field> getListOfRequestedFields(Class<?> clazz) {
         return ReflectionUtils.getAllFieldsFor(clazz).stream().filter(x -> x.isAnnotationPresent(Atom.class)).collect(Collectors.toList());
     }
 
-    private  void scream(Class<?> x){
-        LoggerFactory.getLogger(DependencyGrapher.class).warn("Atomic types should contain No-Args-Construct but " + x.getName() + " does not!, this can lead to Undefined Behavior");
+
+    private void provideRequestedFieldFor(Object forWhom, Field fromWhere) {
+
+        Class<?> typeOfField = atomFieldConcreteType.computeIfAbsent(fromWhere, field -> {  // compute and cache type of field
+            if (field.getAnnotation(Atom.class).concreteType() != Object.class) {
+                Class<?> cc = field.getAnnotation(Atom.class).concreteType();
+                if (!field.getType().isAssignableFrom(cc))
+                    AtomicLogger.getInstance().error_unCastableAtom(field, cc);
+                return cc;
+            } else
+                return field.getType();
+        });
+
+        Optional<Object> requiredInstance; // below switch will fill this instance according to type
+
+        switch (atomFieldsType.computeIfAbsent(fromWhere, x -> x.getAnnotation(Atom.class).type())) { // compute and cache Type of Field
+
+            case Shared: // shared act like singleton so we cache if we made one
+                Object resolvedInstance = instancesOfSharedFields.computeIfAbsent(fromWhere, x -> {
+                    try {
+                        Optional<Object> instance = safeConstructor.getNewInstance(typeOfField);
+                        if (!instance.isPresent()) { // case Atomic not found meaning user request a non atomic type
+                            AtomicLogger.getInstance().complain_AtomicNotFound(typeOfField);
+                            return null;
+                        } else
+                            return instance.get(); // when everything goes fine
+                    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) { // when type is actually atomic but no-args-const doesnt exist
+                        AtomicLogger.getInstance().complain_NorArgConstructor(typeOfField);
+                        return null;
+                    }
+                });
+                requiredInstance = resolvedInstance == null ? Optional.empty() : Optional.of(resolvedInstance); // passing out the required instance
+                break;
+            case Unique:
+                try {
+                    requiredInstance = safeConstructor.getNewInstance(typeOfField);
+                    if (!requiredInstance.isPresent()) { // case Atomic not found meaning user request a non atomic type
+                        AtomicLogger.getInstance().complain_AtomicNotFound(typeOfField);
+                    }
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                    requiredInstance = Optional.empty();
+                    AtomicLogger.getInstance().complain_NorArgConstructor(typeOfField);
+                }
+                break;
+            default:
+                requiredInstance = Optional.empty();
+                break;
+        }
+
+        try {
+            if (requiredInstance.isPresent()) {
+                fromWhere.set(forWhom, requiredInstance.get());
+            }
+        } catch (IllegalAccessException e) {
+            AtomicLogger.getInstance().facingABug(fromWhere.getDeclaringClass(), e);
+        }
+
+    }
+
+    // by providing default paths you can generate some predefined behavior
+    protected void addScannablePath(String... paths) {
+        scannablePaths.addAll(Arrays.asList(paths));
+    }
+
+    // return generator of given Atomic
+    protected Factory<?> getFactoryOf(Class<?> clazz) {
+        return factories.get(clazz);
     }
 
 
-
-    public  List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation) {
-        return ReflectionUtils.getAllAtomicAnnotatedWith(annotation);
+    // for test only! you should not access Provider Directly!
+    public Provider getProvider() {
+        return provider;
     }
 
 
-    public  List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz) {
-        return ReflectionUtils.getAllAtomicDerivedFrom(clazz);
-    }
+    //                   singleton pattern                              //
+    private static DependencyGrapher instance;
 
-    @SuppressWarnings("unchecked")
-    public <T> List<T> getAllAtomicInstancesDerivedFrom(Class<T> clazz) {
-        return getAllAtomicDerivedFrom(clazz).stream()
-                .map(x->getFactoryOf(x).generate())
-                .flatMap((Function<Optional<?>, Stream<?>>) o ->  o.isPresent()? Stream.of(o.get()): Stream.empty())
-                .map(x->(T) x)
-                .collect(Collectors.toList());
+    public static DependencyGrapher getInstance() {
+        if (instance == null)
+            instance = new DependencyGrapher();
+        return instance;
     }
 
 

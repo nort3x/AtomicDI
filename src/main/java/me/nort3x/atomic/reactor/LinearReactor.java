@@ -1,7 +1,8 @@
 package me.nort3x.atomic.reactor;
 
 /**
- {@inheritDoc}
+ * {@inheritDoc}
+ * linear version of {@link ParallelReactor}
  */
 public class LinearReactor<T> extends ParallelReactor<T>{
 

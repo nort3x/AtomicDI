@@ -27,8 +27,6 @@ public class ReflectionUtils {
         private static final ArrayList<Class<?>> allLoadedAtomic = new ArrayList<>();
         private static final ConcurrentHashMap<Class<?>,List<Class<?>>> everyAtomicDerivedFromKey = new ConcurrentHashMap<>();
 
-
-
     }
 
 
@@ -50,7 +48,7 @@ public class ReflectionUtils {
 
     @Deprecated
     public static List<Field> getAccessibleFieldsFor(Class<?> clazz,Object callerInstance){
-        return Arrays.asList(clazz.getDeclaredFields()).stream().filter(AccessibleObject::isAccessible).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredFields()).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
     public static Optional<Constructor<?>> getNoArgsConstructor(Class<?> clazz) {

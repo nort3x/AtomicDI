@@ -11,12 +11,17 @@ public class ClassGraphTest {
 
     @Test
     void shouldGraphDummyPackage(){
-        DependencyGrapher.getInstance().graphUsingThisEntryPoint(this.getClass());
-        Factory<?> f  = DependencyGrapher.getInstance().getFactoryOf(DependencyLike.class);
+        DependencyGrapher d = DependencyGrapher.getInstance();
+        d.graphUsingThisEntryPoint(this.getClass());
+        Factory<?> f = DependencyGrapher.getInstance().getProvider().getFactoryOf(DependencyLike.class);
         Assertions.assertTrue(f.generate().isPresent());
-        DependencyLike dp = ((DependencyLike)f.generate().get());
-        Assertions.assertEquals(dp.getInt(),2);
-        Assertions.assertEquals(dp.a,1);
+        DependencyLike dp = ((DependencyLike) f.generate().get());
+        Assertions.assertEquals(dp.getInt(), 2);
+        Assertions.assertEquals(dp.a, 1);
     }
+
+
+
+
 
 }
