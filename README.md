@@ -8,21 +8,23 @@ it provides some convenient features and tools especially designed to simplify I
 ## Installation
 
 
-Add it in your root build.gradle at the end of repositories:
+Add it in your root build.gradle at the end of repositories: (if not already!)
 
-	allprojects {
-		repositories {
-			...
-			maven { url 'https://jitpack.io' }
-		}
+```gradle
+allprojects {
+	repositories {
+		...
+		maven { url 'https://jitpack.io' }
 	}
+}
 
+```
 Step 2. Add the dependency
-
-	dependencies {
-	        implementation 'com.github.nort3x:AtomicDI:0.0.0-alpha.0'
-	}
-
+```gradle
+dependencies {
+	implementation 'com.github.nort3x:AtomicDI:0.0.0-alpha.0'
+}
+```
 
 
 ## Features
