@@ -2,6 +2,7 @@ package me.nort3x.atomic.bean;
 
 import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.annotation.Atomic;
+import me.nort3x.atomic.annotation.Exclude;
 import me.nort3x.atomic.annotation.PostConstruction;
 import me.nort3x.atomic.basic.Policy;
 import me.nort3x.atomic.logger.AtomicLogger;
@@ -58,7 +59,7 @@ public class DependencyGrapher {
     public void graphUsingThisEntryPoint(Class<?> point) {
 
         // get All Atomics
-        Collection<Class<?>> atomics = new Reflections(point, scannablePaths.toArray()).getTypesAnnotatedWith(Atomic.class);
+        Collection<Class<?>> atomics = new Reflections(point, scannablePaths.toArray()).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
 
 
         ReflectionUtils.loadAllLoadedAtomic(atomics);

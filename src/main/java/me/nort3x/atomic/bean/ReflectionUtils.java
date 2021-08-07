@@ -1,5 +1,7 @@
 package me.nort3x.atomic.bean;
 
+import me.nort3x.atomic.annotation.Exclude;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
@@ -31,24 +33,24 @@ public class ReflectionUtils {
 
 
     public static List<Method> getAllMethodsFor(Class<?> clazz){
-        return GreedyBag.everyMethodScanned.computeIfAbsent(clazz, x-> Arrays.asList(x.getDeclaredMethods()))
-                .stream().peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
+        return GreedyBag.everyMethodScanned.computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredMethods()))
+                .stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
     @Deprecated
     public static List<Method> getAccessibleMethodsFor(Class<?> clazz,Object callerInstance){
-        return Arrays.stream(clazz.getDeclaredMethods()).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredMethods()).filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
 
     public static List<Field> getAllFieldsFor(Class<?> clazz){
-        return GreedyBag.everyFieldScanned.computeIfAbsent(clazz, x-> Arrays.asList(x.getDeclaredFields()))
-                .stream().peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
+        return GreedyBag.everyFieldScanned.computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredFields()))
+                .stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
     @Deprecated
     public static List<Field> getAccessibleFieldsFor(Class<?> clazz,Object callerInstance){
-        return Arrays.stream(clazz.getDeclaredFields()).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredFields()).filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
     public static Optional<Constructor<?>> getNoArgsConstructor(Class<?> clazz) {
@@ -62,13 +64,13 @@ public class ReflectionUtils {
     }
 
     public static List<Method> getMethodsAnnotatedWith(Class<?> src, Class<? extends Annotation> annotation){
-        return GreedyBag.everyAnnotatedMethodScanned.computeIfAbsent(src,x->new ConcurrentHashMap<>()).computeIfAbsent(annotation,an-> getAllMethodsFor(src).stream().filter(x->x.isAnnotationPresent(annotation))
-                    .collect(Collectors.toList()));
+        return GreedyBag.everyAnnotatedMethodScanned.computeIfAbsent(src, x -> new ConcurrentHashMap<>()).computeIfAbsent(annotation, an -> getAllMethodsFor(src).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(x -> x.isAnnotationPresent(annotation))
+                .collect(Collectors.toList()));
 
     }
 
     public static List<Constructor<?>> getAllConstructors(Class<?> clazz) {
-        return Arrays.stream(clazz.getDeclaredConstructors()).peek(x->x.setAccessible(true)).collect(Collectors.toList());
+        return Arrays.stream(clazz.getDeclaredConstructors()).filter(x -> !x.isAnnotationPresent(Exclude.class)).peek(x -> x.setAccessible(true)).collect(Collectors.toList());
     }
 
     private static void setAccessible(Method m){
@@ -80,11 +82,11 @@ public class ReflectionUtils {
     }
 
     public static List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation){
-        return GreedyBag.everyAtomicAnnotatedClassScanned.computeIfAbsent(annotation,x-> GreedyBag.allLoadedAtomic.stream().filter(y->y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
+        return GreedyBag.everyAtomicAnnotatedClassScanned.computeIfAbsent(annotation, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(y -> y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
     }
 
     public static List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz){
-        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz,x-> GreedyBag.allLoadedAtomic.stream().filter(clazz::isAssignableFrom).collect(Collectors.toList()));
+        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
     }
 
 }
