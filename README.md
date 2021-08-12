@@ -52,3 +52,5 @@ Step 2. Add the dependency
     <li>Configuration and Policies</li> 
 </ul>
 
+## Examples
++ [AtomicJDA](https://github.com/nort3x/AtomicJDA) - AtomicDI approach for developing Discord Bot(s)
