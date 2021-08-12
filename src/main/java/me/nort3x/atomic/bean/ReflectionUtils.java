@@ -13,15 +13,19 @@ import java.util.stream.Collectors;
 
 public class ReflectionUtils {
 
-    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics) {
+    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics, AtomicDIModule amd) {
+        GreedyBag.atomics_ofModule.computeIfAbsent(amd.getClass(), a -> {
+            return atomics;
+        });
         GreedyBag.allLoadedAtomic.addAll(atomics);
     }
 
     // when we scan once we keep it, faster easier!
-    private static class GreedyBag{
+    private static class GreedyBag {
 
-        private static final ConcurrentHashMap<Class<?>,List<Field>> everyFieldScanned = new ConcurrentHashMap<>();
-        private static final ConcurrentHashMap<Class<?>,List<Method>> everyMethodScanned = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<Class<? extends AtomicDIModule>, Collection<Class<?>>> atomics_ofModule = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<Class<?>, List<Field>> everyFieldScanned = new ConcurrentHashMap<>();
+        private static final ConcurrentHashMap<Class<?>, List<Method>> everyMethodScanned = new ConcurrentHashMap<>();
 
         private static final ConcurrentHashMap<Class<?>,List<Field>> everyAtomFieldScanned = new ConcurrentHashMap<>();
         private static final ConcurrentHashMap<Class<?>,ConcurrentHashMap<Class<?extends Annotation>,List<Method>>> everyAnnotatedMethodScanned = new ConcurrentHashMap<>();
@@ -81,12 +85,27 @@ public class ReflectionUtils {
         f.setAccessible(true);
     }
 
-    public static List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation){
+    public static List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation) {
         return GreedyBag.everyAtomicAnnotatedClassScanned.computeIfAbsent(annotation, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(y -> y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
     }
 
-    public static List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz){
+    public static List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz) {
         return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
+    }
+
+    public static List<Class<?>> getAllAtomicInModuleDerivedFrom(Class<?> clazz, Class<? extends AtomicDIModule> module) {
+        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz, x -> GreedyBag.atomics_ofModule.get(module).stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
+    }
+
+    public static Class<? extends AtomicDIModule> getCorrespondingModule(Class<?> atomic) {
+        Class<? extends AtomicDIModule> ans = null;
+        for (Class<? extends AtomicDIModule> atomicDIModule : GreedyBag.atomics_ofModule.keySet()) {
+            if (GreedyBag.atomics_ofModule.get(atomicDIModule).contains(atomic)) {
+                ans = atomicDIModule;
+                break;
+            }
+        }
+        return ans;
     }
 
 }

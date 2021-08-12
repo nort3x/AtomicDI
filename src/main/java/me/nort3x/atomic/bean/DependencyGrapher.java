@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * <H3>DependencyGrapher</H3>
  * this class will organize module scanning system
- * following life cycle happens after calling {@link DependencyGrapher#graphUsingThisEntryPoint(Class)}
+ * following life cycle happens after calling {@link DependencyGrapher#run()} ()} ()}
  * <ul>
  *
  *         <li>Grab all {@link Atomic}s</li>
@@ -32,9 +32,9 @@ import java.util.stream.Collectors;
  *
  * @implNote subclasses should be only accessible via singleton as well
  */
-public class DependencyGrapher {
+public final class DependencyGrapher {
 
-    private final HashSet<String> scannablePaths = new HashSet<>();
+    private final HashMap<String, AtomicDIModule> scannablePaths = new HashMap<>();
 
     // bunch of maps for caching and cutting out jvm lookups , these are references
     private final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>(); // caching defined type of atom {Shared,Unique,...} avoiding getAnnotation lookup
@@ -55,18 +55,22 @@ public class DependencyGrapher {
         safeConstructor = new SafeConstructor();
     }
 
+    public void addModules(AtomicDIModule... atomicDIModule) {
+        Arrays.stream(atomicDIModule).sequential().forEach(x -> scannablePaths.putIfAbsent(x.provideModulePackagePath(), x));
+    }
+
     // main method user should call
-    public void graphUsingThisEntryPoint(Class<?> point) {
-
-        // get All Atomics
-        Collection<Class<?>> atomics = new Reflections(point, scannablePaths.toArray()).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
-
-
-        ReflectionUtils.loadAllLoadedAtomic(atomics);
-        // get All Constructors of Atomics
-        makeConstructors(atomics);
-        makeFactories(atomics);
-        makeRules();
+    public void run() {
+        scannablePaths.forEach((path, module) -> {
+            module.onPreLoad();
+            Collection<Class<?>> atomics = new Reflections(path).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
+            ReflectionUtils.loadAllLoadedAtomic(atomics, module);
+            // get All Constructors of Atomics
+            makeConstructors(atomics);
+            makeFactories(atomics);
+            makeRules(module.getClass());
+            module.onPostLoad();
+        });
         rules.actOn(provider);
     }
 
@@ -99,8 +103,8 @@ public class DependencyGrapher {
     }
 
     // parse rules and ready them up for execution
-    private void makeRules() {
-        rules.addReactions(ReflectionUtils.getAllAtomicDerivedFrom(Policy.class).stream().map(x -> {
+    private void makeRules(Class<? extends AtomicDIModule> moduleClazz) {
+        rules.addReactions(ReflectionUtils.getAllAtomicInModuleDerivedFrom(Policy.class, moduleClazz).stream().map(x -> {
             try {
                 return (Policy) x.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
@@ -174,10 +178,6 @@ public class DependencyGrapher {
 
     }
 
-    // by providing default paths you can generate some predefined behavior
-    protected void addScannablePath(String... paths) {
-        scannablePaths.addAll(Arrays.asList(paths));
-    }
 
     // return generator of given Atomic
     protected Factory<?> getFactoryOf(Class<?> clazz) {
