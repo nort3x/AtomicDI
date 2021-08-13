@@ -82,7 +82,7 @@ public class ReflectionUtils {
     public static List<Class<?>> getAllAtomicInModuleDerivedFrom(Class<?> clazz, Class<? extends AtomicDIModule> module) {
         Collection<Class<?>> atomics = GreedyBag.getEveryTypeLoadedInFavorOfPoint().getOrDefault(module, null);
         if (atomics == null)
-            return List.of();
+            return new ArrayList<>();
 
         return atomics.stream()
                 .filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom)
