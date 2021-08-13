@@ -21,7 +21,7 @@ allprojects {
 Step 2. Add the dependency
 ```gradle
 dependencies {
-    implementation 'com.github.nort3x:AtomicDI:bet-null'
+    implementation 'com.github.nort3x:AtomicDI:1.0.2-rewised'
 }
 ```
 
@@ -41,7 +41,7 @@ Step 2. Add the dependency
 <dependency>
     <groupId>com.github.nort3x</groupId>
     <artifactId>AtomicDI</artifactId>
-    <version>bet-null</version>
+    <version>1.0.2-rewised</version>
 </dependency>
 ```
 
