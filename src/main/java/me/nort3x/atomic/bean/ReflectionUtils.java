@@ -13,42 +13,27 @@ import java.util.stream.Collectors;
 
 public class ReflectionUtils {
 
-    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics, AtomicDIModule amd) {
-        GreedyBag.atomics_ofModule.computeIfAbsent(amd.getClass(), a -> {
-            return atomics;
-        });
-        GreedyBag.allLoadedAtomic.addAll(atomics);
-    }
-
-    // when we scan once we keep it, faster easier!
-    private static class GreedyBag {
-
-        private static final ConcurrentHashMap<Class<? extends AtomicDIModule>, Collection<Class<?>>> atomics_ofModule = new ConcurrentHashMap<>();
-        private static final ConcurrentHashMap<Class<?>, List<Field>> everyFieldScanned = new ConcurrentHashMap<>();
-        private static final ConcurrentHashMap<Class<?>, List<Method>> everyMethodScanned = new ConcurrentHashMap<>();
-
-        private static final ConcurrentHashMap<Class<?>,List<Field>> everyAtomFieldScanned = new ConcurrentHashMap<>();
-        private static final ConcurrentHashMap<Class<?>,ConcurrentHashMap<Class<?extends Annotation>,List<Method>>> everyAnnotatedMethodScanned = new ConcurrentHashMap<>();
-        private static final ConcurrentHashMap<Class<?extends Annotation>,List<Class<?>>> everyAtomicAnnotatedClassScanned = new ConcurrentHashMap<>();
-        private static final ArrayList<Class<?>> allLoadedAtomic = new ArrayList<>();
-        private static final ConcurrentHashMap<Class<?>,List<Class<?>>> everyAtomicDerivedFromKey = new ConcurrentHashMap<>();
-
+    // load atomic into scope
+    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics, Class<? extends AtomicDIModule> moduleClazz) {
+        atomics.forEach(x -> GreedyBag.getEveryTypeToFavorPoint().putIfAbsent(x, moduleClazz));
+        GreedyBag.getEveryTypeLoadedInFavorOfPoint().computeIfAbsent(moduleClazz, clazzAsKey -> new ArrayList<>()).addAll(atomics);
+        GreedyBag.getAllLoadedTypes().addAll(atomics);
     }
 
 
-    public static List<Method> getAllMethodsFor(Class<?> clazz){
-        return GreedyBag.everyMethodScanned.computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredMethods()))
+    public static List<Method> getAllMethodsFor(Class<?> clazz) {
+        return GreedyBag.getEveryMethodScannedForAClass().computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredMethods()))
                 .stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
     @Deprecated
-    public static List<Method> getAccessibleMethodsFor(Class<?> clazz,Object callerInstance){
+    public static List<Method> getAccessibleMethodsFor(Class<?> clazz, Object callerInstance) {
         return Arrays.stream(clazz.getDeclaredMethods()).filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(AccessibleObject::isAccessible).collect(Collectors.toList());
     }
 
 
     public static List<Field> getAllFieldsFor(Class<?> clazz){
-        return GreedyBag.everyFieldScanned.computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredFields()))
+        return GreedyBag.getEveryFieldScannedForAClass().computeIfAbsent(clazz, x -> Arrays.asList(x.getDeclaredFields()))
                 .stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).peek(ReflectionUtils::setAccessible).collect(Collectors.toList());
     }
 
@@ -68,7 +53,7 @@ public class ReflectionUtils {
     }
 
     public static List<Method> getMethodsAnnotatedWith(Class<?> src, Class<? extends Annotation> annotation){
-        return GreedyBag.everyAnnotatedMethodScanned.computeIfAbsent(src, x -> new ConcurrentHashMap<>()).computeIfAbsent(annotation, an -> getAllMethodsFor(src).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(x -> x.isAnnotationPresent(annotation))
+        return GreedyBag.getEveryAnnotatedMethodOfClass().computeIfAbsent(src, x -> new ConcurrentHashMap<>()).computeIfAbsent(annotation, an -> getAllMethodsFor(src).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).filter(x -> x.isAnnotationPresent(annotation))
                 .collect(Collectors.toList()));
 
     }
@@ -86,21 +71,28 @@ public class ReflectionUtils {
     }
 
     public static List<Class<?>> getAllAtomicAnnotatedWith(Class<? extends Annotation> annotation) {
-        return GreedyBag.everyAtomicAnnotatedClassScanned.computeIfAbsent(annotation, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(y -> y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
+        return GreedyBag.getEveryAnnotatedType().computeIfAbsent(annotation, x -> GreedyBag.getAllLoadedTypes().stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(y -> y.isAnnotationPresent(annotation)).collect(Collectors.toList()));
     }
 
     public static List<Class<?>> getAllAtomicDerivedFrom(Class<?> clazz) {
-        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz, x -> GreedyBag.allLoadedAtomic.stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
+        return GreedyBag.getEveryTypeDerivedFromKey().computeIfAbsent(clazz, x -> GreedyBag.getAllLoadedTypes().stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
     }
 
+
     public static List<Class<?>> getAllAtomicInModuleDerivedFrom(Class<?> clazz, Class<? extends AtomicDIModule> module) {
-        return GreedyBag.everyAtomicDerivedFromKey.computeIfAbsent(clazz, x -> GreedyBag.atomics_ofModule.get(module).stream().filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom).collect(Collectors.toList()));
+        Collection<Class<?>> atomics = GreedyBag.getEveryTypeLoadedInFavorOfPoint().getOrDefault(module, null);
+        if (atomics == null)
+            return List.of();
+
+        return atomics.stream()
+                .filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom)
+                .collect(Collectors.toList());
     }
 
     public static Class<? extends AtomicDIModule> getCorrespondingModule(Class<?> atomic) {
         Class<? extends AtomicDIModule> ans = null;
-        for (Class<? extends AtomicDIModule> atomicDIModule : GreedyBag.atomics_ofModule.keySet()) {
-            if (GreedyBag.atomics_ofModule.get(atomicDIModule).contains(atomic)) {
+        for (Class<? extends AtomicDIModule> atomicDIModule : GreedyBag.getEveryTypeLoadedInFavorOfPoint().keySet()) {
+            if (GreedyBag.getEveryTypeLoadedInFavorOfPoint().get(atomicDIModule).contains(atomic)) {
                 ans = atomicDIModule;
                 break;
             }

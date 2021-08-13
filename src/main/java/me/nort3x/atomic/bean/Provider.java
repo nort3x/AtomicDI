@@ -21,6 +21,15 @@ public class Provider {
         this.dependencyGrapher = dependencyGrapher;
     }
 
+    String[] args;
+
+    public void setArgs(String[] args) {
+        this.args = args;
+    }
+
+    public String[] getArgs() {
+        return args;
+    }
 
     /**
      * @param annotation annotation type

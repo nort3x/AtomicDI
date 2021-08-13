@@ -5,8 +5,8 @@ import java.lang.annotation.*;
 
 /**
  * first method in {@link Atomic} types that is annotated with this will be called exactly after creation
- * <ul>
- *     <pre>
+ *
+ * <pre>
  *     <code>
  * {@literal @}Atomic
  *        class MyType{
@@ -20,10 +20,10 @@ import java.lang.annotation.*;
  *              }
  *        }
  *     </code>
- *     </pre>
- * </ul>
- *
- * @apiNote Cyclic dependency is not resolved in this version, using this carelessly cam result in NPE
+ * </pre>
+ * <p>
+ * <p>
+ * Cyclic dependency is not resolved in this version, using this carelessly cam result in NPE
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

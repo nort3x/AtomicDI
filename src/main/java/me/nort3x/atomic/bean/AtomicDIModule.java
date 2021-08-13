@@ -11,7 +11,7 @@ public abstract class AtomicDIModule {
 
     protected abstract int provideModuleVersion();
 
-    protected abstract void onPreLoad();
+    protected abstract void onPreLoad(String... args);
 
-    protected abstract void onPostLoad();
+    protected abstract void onPostLoad(String... args);
 }

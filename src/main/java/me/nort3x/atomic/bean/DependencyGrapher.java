@@ -18,9 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * <H3>DependencyGrapher</H3>
+ * <H2>DependencyGrapher</H2>
  * this class will organize module scanning system
- * following life cycle happens after calling {@link DependencyGrapher#run()} ()} ()}
+ * following life cycle happens after calling {@link DependencyGrapher#run(String...)} ()} ()}
  * <ul>
  *
  *         <li>Grab all {@link Atomic}s</li>
@@ -29,49 +29,82 @@ import java.util.stream.Collectors;
  *         <li>Apply provided Custom-Polices (see {@link Policy})</li>
  *
  * </ul>
- *
- * @implNote subclasses should be only accessible via singleton as well
+ * <p>
+ * subclasses should be only accessible via singleton as well
  */
 public final class DependencyGrapher {
 
-    private final HashMap<String, AtomicDIModule> scannablePaths = new HashMap<>();
-
-    // bunch of maps for caching and cutting out jvm lookups , these are references
-    private final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>(); // caching defined type of atom {Shared,Unique,...} avoiding getAnnotation lookup
-    private final ConcurrentHashMap<Field, Class<?>> atomFieldConcreteType = new ConcurrentHashMap<>(); // caching getType lookup
-    private final ConcurrentHashMap<Class<?>, Factory<?>> factories = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Field, Object> instancesOfSharedFields = new ConcurrentHashMap<>();
-
-    // rules will applied parallelized after initialization and scan
-    private final ParallelReactor<Provider> rules = new ParallelReactor<>();
 
     // restricted API to DependencyGrapher
     private final Provider provider;
     private final SafeConstructor safeConstructor;
 
-    // for singleton
+    // singleton pattern
     protected DependencyGrapher() {
         provider = new Provider(this);
         safeConstructor = new SafeConstructor();
     }
 
-    public void addModules(AtomicDIModule... atomicDIModule) {
-        Arrays.stream(atomicDIModule).sequential().forEach(x -> scannablePaths.putIfAbsent(x.provideModulePackagePath(), x));
+    private static DependencyGrapher instance;
+
+    public static DependencyGrapher getInstance() {
+        if (instance == null)
+            instance = new DependencyGrapher();
+        return instance;
+    }
+
+
+    // add each module for scanning
+    @SafeVarargs
+    public final void addModules(AtomicDIModule... atomicDIModules) {
+        Arrays.stream(atomicDIModules).forEach(x -> {
+            module_instances.putIfAbsent(x.getClass(), x);
+        });
     }
 
     // main method user should call
-    public void run() {
-        scannablePaths.forEach((path, module) -> {
-            module.onPreLoad();
-            Collection<Class<?>> atomics = new Reflections(path).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
-            ReflectionUtils.loadAllLoadedAtomic(atomics, module);
+    public void run(String... args) {
+        provider.setArgs(args);
+        module_instances.forEach((clazz, module) -> {
+            module.onPreLoad(args);
+            Collection<Class<?>> atomics = new Reflections(module.provideModulePackagePath()).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
+            ReflectionUtils.loadAllLoadedAtomic(atomics, clazz);
             // get All Constructors of Atomics
             makeConstructors(atomics);
             makeFactories(atomics);
-            makeRules(module.getClass());
-            module.onPostLoad();
+            makeRules(clazz);
+            module.onPostLoad(args);
         });
         rules.actOn(provider);
+    }
+
+    // main method user should call
+    public void run(Class<?> point, String... args) {
+        addModules(new AtomicDIModule() {
+            @Override
+            protected String provideModuleName() {
+                return "Default EntryPoint: " + point.getSimpleName();
+            }
+
+            @Override
+            protected int provideModuleVersion() {
+                return -1;
+            }
+
+            @Override
+            protected void onPreLoad(String... args) {
+            }
+
+            @Override
+            protected void onPostLoad(String... args) {
+            }
+
+            @Override
+            protected String provideModulePackagePath() {
+                return point.getPackage().getName();
+            }
+        });
+        run(args);
     }
 
     // generate Constructors for factories
@@ -191,14 +224,15 @@ public final class DependencyGrapher {
     }
 
 
-    //                   singleton pattern                              //
-    private static DependencyGrapher instance;
+    // bunch of maps for caching and cutting out jvm lookups , these are references
+    private final ConcurrentHashMap<Class<? extends AtomicDIModule>, AtomicDIModule> module_instances = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>(); // caching defined type of atom {Shared,Unique,...} avoiding getAnnotation lookup
+    private final ConcurrentHashMap<Field, Class<?>> atomFieldConcreteType = new ConcurrentHashMap<>(); // caching getType lookup
+    private final ConcurrentHashMap<Class<?>, Factory<?>> factories = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Field, Object> instancesOfSharedFields = new ConcurrentHashMap<>();
 
-    public static DependencyGrapher getInstance() {
-        if (instance == null)
-            instance = new DependencyGrapher();
-        return instance;
-    }
+    // rules will applied parallelized after initialization and scan
+    private final ParallelReactor<Provider> rules = new ParallelReactor<>();
 
 
 }
