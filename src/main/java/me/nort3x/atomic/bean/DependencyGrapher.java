@@ -4,7 +4,6 @@ import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.annotation.Exclude;
 import me.nort3x.atomic.annotation.PostConstruction;
-import me.nort3x.atomic.basic.Policy;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.reactor.Factory;
 import me.nort3x.atomic.reactor.ParallelReactor;
@@ -15,6 +14,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *         <li>Grab all {@link Atomic}s</li>
  *         <li>Check/Generate all {@link Atomic}s no-args-constructors</li>
  *         <li>Wire dependencies({@link Atom}s) and generate factories</li>
- *         <li>Apply provided Custom-Polices (see {@link Policy})</li>
+ *         <li>Apply provided Custom-Polices (see {@link AtomicDISubModule})</li>
  *
  * </ul>
  * <p>
@@ -66,6 +66,7 @@ public final class DependencyGrapher {
     public void run(String... args) {
         provider.setArgs(args);
         module_instances.forEach((clazz, module) -> {
+            AtomicLogger.getInstance().info("[Grapher] Scanning : " + module.provideModuleName() + ":" + module.provideModuleVersion());
             module.onPreLoad(args);
             Collection<Class<?>> atomics = new Reflections(module.provideModulePackagePath()).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
             ReflectionUtils.loadAllLoadedAtomic(atomics, clazz);
@@ -75,7 +76,19 @@ public final class DependencyGrapher {
             makeRules(clazz);
             module.onPostLoad(args);
         });
-        rules.actOn(provider);
+        AtomicLogger.getInstance().info("[Grapher] Invoking AtomicDISubModules WarmUp");
+        allSubModulesWarmUps.actOn(provider);
+
+        AtomicLogger.getInstance().info("[Grapher] Invoking AtomicDISubModules afterLoads");
+        allSubModulesAfterLoad.actOn(null);
+
+        AtomicLogger.getInstance().info("[Grapher] Invoking AtomicDIModules afterLoads");
+        module_instances.values().forEach(x -> {
+
+            AtomicLogger.getInstance().info("[Grapher] Invoking Module " + x.provideModuleName() + ":" + x.provideModuleVersion() + " afterLoad");
+            x.afterLoadInvoke(args);
+        });
+
     }
 
     // main method user should call
@@ -97,6 +110,11 @@ public final class DependencyGrapher {
 
             @Override
             protected void onPostLoad(String... args) {
+            }
+
+            @Override
+            protected void afterLoadInvoke(String... args) {
+
             }
 
             @Override
@@ -137,14 +155,24 @@ public final class DependencyGrapher {
 
     // parse rules and ready them up for execution
     private void makeRules(Class<? extends AtomicDIModule> moduleClazz) {
-        rules.addReactions(ReflectionUtils.getAllAtomicInModuleDerivedFrom(Policy.class, moduleClazz).stream().map(x -> {
+        List<AtomicDISubModule> subModules = ReflectionUtils.getAllAtomicInModuleDerivedFrom(AtomicDISubModule.class, moduleClazz).stream().map(x -> {
             try {
-                return (Policy) x.getConstructor().newInstance();
+                return (AtomicDISubModule) x.getConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                 AtomicLogger.getInstance().complain_NorArgConstructor(x);
                 return null;
             }
-        }).filter(Objects::nonNull).collect(Collectors.toList()));
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+        allSubModulesWarmUps.addReactions(subModules.stream().map(x -> (Consumer<Provider>) provider -> {
+            AtomicLogger.getInstance().info("[Grapher] WarmingUp SubModule " + x.getIdentifier());
+            x.accept(provider);
+        }).collect(Collectors.toList()));
+
+        allSubModulesAfterLoad.addReactions(subModules.stream().map(x -> (Consumer<Void>) provider -> {
+            AtomicLogger.getInstance().info("[Grapher] Invoking Submodule " + x.getIdentifier() + " afterLoad");
+            x.whenAllSubModulesLoaded();
+        }).collect(Collectors.toList()));
+
     }
 
     // return list of Atom fields of given Atomic only used in makeFactories
@@ -232,7 +260,7 @@ public final class DependencyGrapher {
     private final ConcurrentHashMap<Field, Object> instancesOfSharedFields = new ConcurrentHashMap<>();
 
     // rules will applied parallelized after initialization and scan
-    private final ParallelReactor<Provider> rules = new ParallelReactor<>();
-
+    private final ParallelReactor<Provider> allSubModulesWarmUps = new ParallelReactor<>();
+    private final ParallelReactor<Void> allSubModulesAfterLoad = new ParallelReactor<>();
 
 }

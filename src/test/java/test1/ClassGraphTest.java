@@ -40,4 +40,9 @@ public class ClassGraphTest extends AtomicDIModule {
 
     }
 
+    @Override
+    protected void afterLoadInvoke(String... args) {
+
+    }
+
 }

@@ -23,5 +23,10 @@ public class Module1 extends AtomicDIModule {
 
     }
 
+    @Override
+    protected void afterLoadInvoke(String... args) {
+
+    }
+
 
 }

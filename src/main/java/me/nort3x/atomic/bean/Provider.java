@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * acts as a public API between {@link DependencyGrapher}  and  {@link me.nort3x.atomic.basic.Policy}
+ * acts as a public API between {@link DependencyGrapher}  and  {@link AtomicDISubModule}
  */
 public class Provider {
 

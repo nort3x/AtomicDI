@@ -5,8 +5,6 @@ public abstract class AtomicDIModule {
         return this.getClass().getPackage().getName();
     }
 
-    ;
-
     protected abstract String provideModuleName();
 
     protected abstract int provideModuleVersion();
@@ -14,4 +12,6 @@ public abstract class AtomicDIModule {
     protected abstract void onPreLoad(String... args);
 
     protected abstract void onPostLoad(String... args);
+
+    protected abstract void afterLoadInvoke(String... args);
 }
