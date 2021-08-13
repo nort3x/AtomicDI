@@ -1,7 +1,10 @@
 package doublePolicies.policy2;
 
+import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.bean.AtomicDIModule;
 
+
+@Atomic
 public class Module2 extends AtomicDIModule {
     @Override
     protected String provideModuleName() {

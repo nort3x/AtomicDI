@@ -6,7 +6,7 @@ import me.nort3x.atomic.bean.DependencyGrapher;
 
 public class EntryPoint {
     public static void main(String[] args) {
-        DependencyGrapher.getInstance().addModules(new Module1(), new Module2());
+        DependencyGrapher.getInstance().addModules(Module1.class, Module2.class);
         DependencyGrapher.getInstance().run();
     }
 }

@@ -4,15 +4,12 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 // when we scan once we keep it, faster easier!
 class GreedyBag {
 
-    private static final ConcurrentHashMap<Class<? extends AtomicDIModule>, Collection<Class<?>>> everyTypeLoadedInFavorOfPoint = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Class<?>, Class<? extends AtomicDIModule>> everyTypeToFavorPoint = new ConcurrentHashMap<>();
 
     // only use this when policies are loaded already
     private static final ArrayList<Class<?>> allLoadedTypes = new ArrayList<>();
@@ -23,13 +20,6 @@ class GreedyBag {
     private static final ConcurrentHashMap<Class<?>, List<Class<?>>> everyTypeDerivedFromKey = new ConcurrentHashMap<>();
 
 
-    protected static ConcurrentHashMap<Class<? extends AtomicDIModule>, Collection<Class<?>>> getEveryTypeLoadedInFavorOfPoint() {
-        return everyTypeLoadedInFavorOfPoint;
-    }
-
-    protected static ConcurrentHashMap<Class<?>, Class<? extends AtomicDIModule>> getEveryTypeToFavorPoint() {
-        return everyTypeToFavorPoint;
-    }
 
     protected static ArrayList<Class<?>> getAllLoadedTypes() {
         return allLoadedTypes;

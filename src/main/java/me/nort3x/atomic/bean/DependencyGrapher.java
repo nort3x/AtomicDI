@@ -56,26 +56,39 @@ public final class DependencyGrapher {
 
     // add each module for scanning
     @SafeVarargs
-    public final void addModules(AtomicDIModule... atomicDIModules) {
-        Arrays.stream(atomicDIModules).forEach(x -> {
-            module_instances.putIfAbsent(x.getClass(), x);
-        });
+    public final void addModules(Class<? extends AtomicDIModule>... atomicDIModules) {
+        atomicModules.addAll(Arrays.asList(atomicDIModules));
     }
+
+    Map<AtomicDIModule, List<AtomicDISubModule>> instancesOfModulesAndSubModules = new ConcurrentHashMap<>();
 
     // main method user should call
     public void run(String... args) {
         provider.setArgs(args);
-        module_instances.forEach((clazz, module) -> {
-            AtomicLogger.getInstance().info("[Grapher] Scanning : " + module.provideModuleName() + ":" + module.provideModuleVersion());
-            module.onPreLoad(args);
-            Collection<Class<?>> atomics = new Reflections(module.provideModulePackagePath()).getTypesAnnotatedWith(Atomic.class).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
-            ReflectionUtils.loadAllLoadedAtomic(atomics, clazz);
-            // get All Constructors of Atomics
-            makeConstructors(atomics);
-            makeFactories(atomics);
-            makeRules(clazz);
-            module.onPostLoad(args);
-        });
+        // load all atomics and relations
+        Collection<Class<?>> allAtomics = new Reflections(atomicModules.stream().map(x -> x.getPackage().getName()).toArray()).getTypesAnnotatedWith(Atomic.class, true).stream().filter(x -> !x.isAnnotationPresent(Exclude.class)).collect(Collectors.toList());
+        ReflectionUtils.loadAllAtomics(allAtomics);
+        makeConstructors(allAtomics);
+        makeFactories(allAtomics);
+
+        // make instance of each AtomicDIModule and corresponding submodules
+        for (Class<? extends AtomicDIModule> atomicModule : atomicModules) {
+            getFactoryOf(atomicModule).generate().ifPresent(x -> {
+                AtomicDIModule module = atomicModule.cast(x);
+                List<AtomicDISubModule> subModulesList = new Reflections(module.provideModulePackagePath()).getTypesAnnotatedWith(Atomic.class, true).stream()
+                        .filter(y -> !y.isAnnotationPresent(Exclude.class))
+                        .filter(AtomicDISubModule.class::isAssignableFrom)
+                        .map(y -> getFactoryOf(y).generate())
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .map(AtomicDISubModule.class::cast)
+                        .collect(Collectors.toList());
+                instancesOfModulesAndSubModules.put(module, subModulesList);
+                makeRules(subModulesList);
+            });
+        }
+
+
         AtomicLogger.getInstance().info("[Grapher] Invoking AtomicDISubModules WarmUp");
         allSubModulesWarmUps.actOn(provider);
 
@@ -83,8 +96,7 @@ public final class DependencyGrapher {
         allSubModulesAfterLoad.actOn(null);
 
         AtomicLogger.getInstance().info("[Grapher] Invoking AtomicDIModules afterLoads");
-        module_instances.values().forEach(x -> {
-
+        instancesOfModulesAndSubModules.keySet().forEach(x -> {
             AtomicLogger.getInstance().info("[Grapher] Invoking Module " + x.provideModuleName() + ":" + x.provideModuleVersion() + " afterLoad");
             x.afterLoadInvoke(args);
         });
@@ -121,7 +133,7 @@ public final class DependencyGrapher {
             protected String provideModulePackagePath() {
                 return point.getPackage().getName();
             }
-        });
+        }.getClass());
         run(args);
     }
 
@@ -154,15 +166,7 @@ public final class DependencyGrapher {
     }
 
     // parse rules and ready them up for execution
-    private void makeRules(Class<? extends AtomicDIModule> moduleClazz) {
-        List<AtomicDISubModule> subModules = ReflectionUtils.getAllAtomicInModuleDerivedFrom(AtomicDISubModule.class, moduleClazz).stream().map(x -> {
-            try {
-                return (AtomicDISubModule) x.getConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                AtomicLogger.getInstance().complain_NorArgConstructor(x);
-                return null;
-            }
-        }).filter(Objects::nonNull).collect(Collectors.toList());
+    private void makeRules(List<AtomicDISubModule> subModules) {
         allSubModulesWarmUps.addReactions(subModules.stream().map(x -> (Consumer<Provider>) provider -> {
             AtomicLogger.getInstance().info("[Grapher] WarmingUp SubModule " + x.getIdentifier());
             x.accept(provider);
@@ -253,7 +257,7 @@ public final class DependencyGrapher {
 
 
     // bunch of maps for caching and cutting out jvm lookups , these are references
-    private final ConcurrentHashMap<Class<? extends AtomicDIModule>, AtomicDIModule> module_instances = new ConcurrentHashMap<>();
+    private final ArrayList<Class<? extends AtomicDIModule>> atomicModules = new ArrayList<>();
     private final ConcurrentHashMap<Field, Atom.Type> atomFieldsType = new ConcurrentHashMap<>(); // caching defined type of atom {Shared,Unique,...} avoiding getAnnotation lookup
     private final ConcurrentHashMap<Field, Class<?>> atomFieldConcreteType = new ConcurrentHashMap<>(); // caching getType lookup
     private final ConcurrentHashMap<Class<?>, Factory<?>> factories = new ConcurrentHashMap<>();

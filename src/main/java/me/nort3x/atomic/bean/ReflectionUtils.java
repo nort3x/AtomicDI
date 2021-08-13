@@ -7,16 +7,17 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class ReflectionUtils {
 
-    // load atomic into scope
-    public synchronized static void loadAllLoadedAtomic(Collection<Class<?>> atomics, Class<? extends AtomicDIModule> moduleClazz) {
-        atomics.forEach(x -> GreedyBag.getEveryTypeToFavorPoint().putIfAbsent(x, moduleClazz));
-        GreedyBag.getEveryTypeLoadedInFavorOfPoint().computeIfAbsent(moduleClazz, clazzAsKey -> new ArrayList<>()).addAll(atomics);
+
+    public synchronized static void loadAllAtomics(Collection<Class<?>> atomics) {
         GreedyBag.getAllLoadedTypes().addAll(atomics);
     }
 
@@ -79,25 +80,6 @@ public class ReflectionUtils {
     }
 
 
-    public static List<Class<?>> getAllAtomicInModuleDerivedFrom(Class<?> clazz, Class<? extends AtomicDIModule> module) {
-        Collection<Class<?>> atomics = GreedyBag.getEveryTypeLoadedInFavorOfPoint().getOrDefault(module, null);
-        if (atomics == null)
-            return new ArrayList<>();
 
-        return atomics.stream()
-                .filter(q -> !q.isAnnotationPresent(Exclude.class)).filter(clazz::isAssignableFrom)
-                .collect(Collectors.toList());
-    }
-
-    public static Class<? extends AtomicDIModule> getCorrespondingModule(Class<?> atomic) {
-        Class<? extends AtomicDIModule> ans = null;
-        for (Class<? extends AtomicDIModule> atomicDIModule : GreedyBag.getEveryTypeLoadedInFavorOfPoint().keySet()) {
-            if (GreedyBag.getEveryTypeLoadedInFavorOfPoint().get(atomicDIModule).contains(atomic)) {
-                ans = atomicDIModule;
-                break;
-            }
-        }
-        return ans;
-    }
 
 }
