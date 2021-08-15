@@ -22,10 +22,8 @@ import java.lang.annotation.*;
  * @see Atomic
  */
 @Documented
-@Inherited
-@Atomic
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.ANNOTATION_TYPE})
 public @interface Atom {
 
     enum Type {

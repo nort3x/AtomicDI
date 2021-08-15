@@ -27,8 +27,8 @@ import java.lang.annotation.*;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@AtomicMethod
 @Documented
+@Interaction
 public @interface PostConstruction {
 
 }
