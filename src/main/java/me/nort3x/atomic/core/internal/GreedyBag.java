@@ -15,17 +15,17 @@ public class GreedyBag {
     final AtomicLogger logger = AtomicLogger.getInstance();
 
     protected void load(Class<?> type) {
-        AtomicType at = AtomicType.getOrCreate(type);
+        AtomicType at = AtomicType.of(type);
         if (!at.isAtomic())
             logger.warning("NonAtomicTypeCalled to be loaded, you are facing a bug, please report this", Priority.VERY_IMPORTANT, GreedyBag.class);
     }
 
     public AtomicAnnotation getAtomicAnnotation(Class<? extends Annotation> annotation) {
-        return AtomicAnnotation.getOrCreate(annotation);
+        return AtomicAnnotation.of(annotation);
     }
 
     public AtomicType getAtomicType(Class<?> type) {
-        return AtomicType.getOrCreate(type);
+        return AtomicType.of(type);
 
     }
 

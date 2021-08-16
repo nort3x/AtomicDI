@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Set;
 
-public class AtomicMethod {
+public final class AtomicMethod {
     final Method correspondingMethod;
     final Set<AtomicAnnotation> annotationSet;
     final Set<AtomicParameter> parameterSet;
@@ -21,10 +21,10 @@ public class AtomicMethod {
                 .map(AtomicParameter::new)
                 .collect(CustomCollector.concurrentSet());
         this.annotationSet = Arrays.stream(correspondingMethod.getAnnotations()).parallel()
-                .map(annotation -> AtomicAnnotation.getOrCreate(annotation.annotationType()))
+                .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
         this.outputType = correspondingMethod.getReturnType();
-        isPostConstruct = this.annotationSet.contains(AtomicAnnotation.getOrCreate(PostConstruction.class));
+        isPostConstruct = this.annotationSet.contains(AtomicAnnotation.of(PostConstruction.class));
         hasAtomicOutput = AtomicAnnotation.isAtomic(this.outputType);
     }
 

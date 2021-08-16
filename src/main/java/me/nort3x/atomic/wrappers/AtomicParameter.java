@@ -16,7 +16,7 @@ public final class AtomicParameter {
     public AtomicParameter(Parameter correspondingParameter) {
         this.correspondingParameter = correspondingParameter;
         annotationSet = Arrays.stream(correspondingParameter.getAnnotations()).parallel()
-                .map(annotation -> AtomicAnnotation.getOrCreate(annotation.annotationType()))
+                .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
         type = correspondingParameter.getType();
         isAtomicType = AtomicAnnotation.isAtomic(type);

@@ -13,9 +13,9 @@ public class ScanningTest {
         AtomicDI a = new AtomicDI();
         a.resolve(ClassOne.class);
         //Assertions.assertEquals(2, a.getGreedyBag().getTypesAnnotations().size());
-        Container c = Container.makeContainerAround(AtomicType.getOrCreate(ClassOne.class));
+        Container c = Container.makeContainerAround(AtomicType.of(ClassOne.class));
 
-        c.get(AtomicType.getOrCreate(ClassOne.class));
+        c.get(AtomicType.of(ClassOne.class));
 
         Thread.sleep(1000);
     }

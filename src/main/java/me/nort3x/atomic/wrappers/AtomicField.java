@@ -8,7 +8,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Set;
 
-public class AtomicField {
+public final class AtomicField {
 
     final Field correspondingField;
     final Set<AtomicAnnotation> annotationSet;
@@ -19,7 +19,7 @@ public class AtomicField {
     public AtomicField(Field correspondingField) {
         this.correspondingField = correspondingField;
         annotationSet = Arrays.stream(correspondingField.getAnnotations()).parallel()
-                .map(annotation -> AtomicAnnotation.getOrCreate(annotation.annotationType()))
+                .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
         this.type = correspondingField.getType();
 

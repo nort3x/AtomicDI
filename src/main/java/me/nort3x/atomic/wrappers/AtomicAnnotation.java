@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AtomicAnnotation {
+public final class AtomicAnnotation {
 
     final Class<? extends Annotation> correspondingAnnotation;
     final Set<Class<? extends Annotation>> annotationSet;
@@ -55,7 +55,7 @@ public class AtomicAnnotation {
 
     public static final ConcurrentHashMap<Class<? extends Annotation>, AtomicAnnotation> alreadyLoadedAnnotations = new ConcurrentHashMap<>();
 
-    public static AtomicAnnotation getOrCreate(Class<? extends Annotation> annotation) {
+    public static AtomicAnnotation of(Class<? extends Annotation> annotation) {
         return alreadyLoadedAnnotations.computeIfAbsent(annotation, AtomicAnnotation::new);
     }
 

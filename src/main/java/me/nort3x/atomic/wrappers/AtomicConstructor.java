@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.Set;
 
-public class AtomicConstructor {
+public final class AtomicConstructor {
     final Constructor<?> correspondingConstructor;
     final Set<AtomicParameter> parameterSet;
     final Set<AtomicAnnotation> annotationSet;
@@ -23,7 +23,7 @@ public class AtomicConstructor {
                 .collect(CustomCollector.concurrentSet());
         isNoArgConstructor = parameterSet.size() == 0;
         this.annotationSet = Arrays.stream(correspondingConstructor.getAnnotations()).parallel()
-                .map(annotation -> AtomicAnnotation.getOrCreate(annotation.annotationType()))
+                .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
     }
 

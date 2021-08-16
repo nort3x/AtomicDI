@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class AtomicType {
+public final class AtomicType {
 
     static final AtomicLogger logger = AtomicLogger.getInstance();
 
@@ -29,7 +29,7 @@ public class AtomicType {
         correspondingType = type;
 
         annotationSet = Arrays.stream(correspondingType.getAnnotations()).parallel()
-                .map(annotation -> AtomicAnnotation.getOrCreate(annotation.annotationType()))
+                .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
 
         if (annotationSet.parallelStream().map(AtomicAnnotation::isAtomic).reduce(false, Boolean::logicalOr)) { // its Atomic;
@@ -163,7 +163,7 @@ public class AtomicType {
 
     private static final ConcurrentHashMap<Class<?>, AtomicType> alreadyScannedTypesAtomicTypes = new ConcurrentHashMap<>();
 
-    public static AtomicType getOrCreate(Class<?> clazz) {
+    public static AtomicType of(Class<?> clazz) {
         return alreadyScannedTypesAtomicTypes.computeIfAbsent(clazz, AtomicType::new);
     }
 }
