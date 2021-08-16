@@ -12,10 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AtomicAnnotation {
 
-    Class<? extends Annotation> correspondingAnnotation;
-    Set<Class<? extends Annotation>> annotationSet;
+    final Class<? extends Annotation> correspondingAnnotation;
+    final Set<Class<? extends Annotation>> annotationSet;
 
-    boolean isAtomic, isInterAction, isExcluded, isAtom, isPredefined;
+    final boolean isAtomic;
+    final boolean isInterAction;
+    final boolean isExcluded;
+    final boolean isAtom;
+    final boolean isPredefined;
 
 
     private AtomicAnnotation(Class<? extends Annotation> correspondingAnnotation) {
@@ -34,14 +38,9 @@ public class AtomicAnnotation {
         isPredefined = annotationSet.contains(Predefined.class) || correspondingAnnotation.equals(Predefined.class);
 
 
-//        isAtomic      = correspondingAnnotation.isAnnotationPresent(Atomic.class)      || correspondingAnnotation.equals(Atomic.class     );
-//        isAtom        = correspondingAnnotation.isAnnotationPresent(Atom.class)        || correspondingAnnotation.equals(Atom.class       );
-//        isInterAction = correspondingAnnotation.isAnnotationPresent(Interaction.class) || correspondingAnnotation.equals(Interaction.class);
-//        isExcluded    = correspondingAnnotation.isAnnotationPresent(Exclude.class)     || correspondingAnnotation.equals(Exclude.class    );
-
     }
 
-    public static ConcurrentHashMap<Class<? extends Annotation>, Set<Class<? extends Annotation>>> relations = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<Class<? extends Annotation>, Set<Class<? extends Annotation>>> relations = new ConcurrentHashMap<>();
 
     public static void discover(Class<? extends Annotation> annotation, Class<? extends Annotation> caller) {
 
@@ -106,11 +105,11 @@ public class AtomicAnnotation {
     }
 
 
-    public static boolean isAtom(Field f) {
-        return Arrays.stream(f.getAnnotations()).parallel()
+    public static boolean isAtomic(Class<?> clazz) {
+        return Arrays.stream(clazz.getAnnotations()).parallel()
                 .map(Annotation::annotationType)
                 .map(AtomicAnnotation::new)
-                .map(AtomicAnnotation::isAtom)
+                .map(AtomicAnnotation::isAtomic)
                 .reduce(false, Boolean::logicalOr);
     }
 
@@ -119,14 +118,6 @@ public class AtomicAnnotation {
                 .map(Annotation::annotationType)
                 .map(AtomicAnnotation::new)
                 .map(AtomicAnnotation::isInterAction)
-                .reduce(false, Boolean::logicalOr);
-    }
-
-    public static boolean isAtomic(Class<?> clazz) {
-        return Arrays.stream(clazz.getAnnotations()).parallel()
-                .map(Annotation::annotationType)
-                .map(AtomicAnnotation::new)
-                .map(AtomicAnnotation::isAtomic)
                 .reduce(false, Boolean::logicalOr);
     }
 
@@ -151,6 +142,14 @@ public class AtomicAnnotation {
                 .map(Annotation::annotationType)
                 .map(AtomicAnnotation::new)
                 .map(AtomicAnnotation::isExcluded)
+                .reduce(false, Boolean::logicalOr);
+    }
+
+    public static boolean isAtom(Field f) {
+        return Arrays.stream(f.getAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::new)
+                .map(AtomicAnnotation::isAtom)
                 .reduce(false, Boolean::logicalOr);
     }
 

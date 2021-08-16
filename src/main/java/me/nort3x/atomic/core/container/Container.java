@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Container {
 
     private final ConcurrentHashMap<AtomicType, Object> instances = new ConcurrentHashMap<>();
-    AtomicType formedAround;
+    final AtomicType formedAround;
 
     private Container(Set<AtomicType> closedSetOfTypes, AtomicType formedAround) {
 
@@ -37,12 +37,8 @@ public class Container {
 
         // config all
         closedSetOfTypes.parallelStream()
-                .forEach(atomicType -> {
-                    atomicType.getFieldSet().parallelStream()
-                            .forEach(atomicField -> {
-                                atomicField.setField(instances.get(atomicType), instances.get(AtomicType.getOrCreate(atomicField.getType())));
-                            });
-                });
+                .forEach(atomicType -> atomicType.getFieldSet().parallelStream()
+                        .forEach(atomicField -> atomicField.setField(instances.get(atomicType), instances.get(AtomicType.getOrCreate(atomicField.getType())))));
 
     }
 
@@ -56,7 +52,12 @@ public class Container {
 
 
     private Object instanceCreator(AtomicType type) {
-        return type.getNoArgsConstructor().getInstance().get();
+        Optional<Object> probablyInstance = type.getNoArgsConstructor().getInstance();
+        if (probablyInstance.isPresent())
+            return probablyInstance.get();
+        AtomicLogger.getInstance().fatal("AtomicCreation Failed for AtomicType: " + type.getCorrespondingType().getName() + " in Container around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+        return null;
+
     }
 
     public static Container makeContainerAround(AtomicType atomicType) {
@@ -84,7 +85,7 @@ public class Container {
                 });
     }
 
-    private static Set<Set<AtomicType>> scannedContainers = ConcurrentHashMap.newKeySet();
+    private static final Set<Set<AtomicType>> scannedContainers = ConcurrentHashMap.newKeySet();
 
 
 }

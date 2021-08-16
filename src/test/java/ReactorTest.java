@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -85,7 +84,7 @@ public class ReactorTest {
     }
 
 
-    AtomicBoolean linearReactorActedWired = new AtomicBoolean(false);
+    final AtomicBoolean linearReactorActedWired = new AtomicBoolean(false);
 
     @DisplayName("will test difference in linear and parallel reactors , might fail from linear behavior of parallel reactor")
     @Test
@@ -176,11 +175,9 @@ public class ReactorTest {
             // this will just add threads;
             for (int i = 0; i < 600; i++) { // lets first be `linear` its just 300 reactions adding to reactor one-by-one nothing!
                 threads.add(new Thread(() -> {
-                    badReactor.addReaction(new Consumer<String>() { // job of thread
-                        @Override
-                        public void accept(String s) {
-                            // nothing just adding!
-                        }
+                    // job of thread
+                    badReactor.addReaction(s -> {
+                        // nothing just adding!
                     });
                 }));
             }

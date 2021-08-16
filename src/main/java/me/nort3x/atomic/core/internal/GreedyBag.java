@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GreedyBag {
 
-    AtomicLogger logger = AtomicLogger.getInstance();
+    final AtomicLogger logger = AtomicLogger.getInstance();
 
     protected void load(Class<?> type) {
         AtomicType at = AtomicType.getOrCreate(type);

@@ -24,12 +24,12 @@ public class AtomicAnnotationProcessor extends AbstractProcessor {
         Set<? extends Element> annotatedElements
                 = roundEnv.getElementsAnnotatedWith(Atomic.class);
 
-        annotatedElements.stream().forEach(item -> {
+        annotatedElements.forEach(item -> {
 
             try {
                 if (!item.getKind().getDeclaringClass().isAnnotationPresent(Atomic.class))
                     return;
-                Constructor c = item.getKind().getDeclaringClass().getConstructor();
+                Constructor<?> c = item.getKind().getDeclaringClass().getConstructor();
             } catch (NoSuchMethodException e) {
                 AtomicLogger.getInstance().fatal("AtomicType does not provide NoArgsConstructor :" + item.getKind().getDeclaringClass().getName(), Priority.VERY_IMPORTANT, AtomicAnnotationProcessor.class);
             }

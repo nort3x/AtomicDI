@@ -28,20 +28,20 @@ public class BasicLogger {
         print(Resources.Log_Prefix, s, priority);
     }
 
-    public void warning(String s, Priority priority) {
-        print(Resources.Warning_Prefix, s, priority);
-    }
-
-    public void fatal(String s, Priority priority) {
-        print(Resources.Error_Prefix, s, priority);
-    }
-
     public void info(String s, Priority priority, Class<?> c) {
         print(Resources.Log_Prefix, forgeName(c) + s, priority);
     }
 
+    public void warning(String s, Priority priority) {
+        print(Resources.Warning_Prefix, s, priority);
+    }
+
     public void warning(String s, Priority priority, Class<?> c) {
         print(Resources.Warning_Prefix, forgeName(c) + s, priority);
+    }
+
+    public void fatal(String s, Priority priority) {
+        print(Resources.Error_Prefix, s, priority);
     }
 
     public void fatal(String s, Priority priority, Class<?> c) {
