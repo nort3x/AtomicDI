@@ -1,9 +1,13 @@
 package me.nort3x.atomic.wrappers;
 
+import me.nort3x.atomic.logger.AtomicLogger;
+import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.utility.CustomCollector;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
 
 public class AtomicConstructor {
@@ -37,6 +41,15 @@ public class AtomicConstructor {
 
     public Set<AtomicAnnotation> getAnnotationSet() {
         return annotationSet;
+    }
+
+    public Optional<Object> getInstance(Object... args) {
+        try {
+            return Optional.of(correspondingConstructor.newInstance(args));
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+            AtomicLogger.getInstance().fatal("Invocation of Constructor of type: " + correspondingConstructor.getDeclaringClass().getName() + " thrown exception: " + AtomicLogger.exceptionToString(e), Priority.VERY_IMPORTANT, AtomicConstructor.class);
+            return Optional.empty();
+        }
     }
 
     @Override

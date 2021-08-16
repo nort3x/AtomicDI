@@ -1,6 +1,8 @@
 package me.nort3x.atomic.logger;
 
 import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class AtomicLogger extends BasicLogger {
     private static OutputStream outputStream = System.out;
@@ -30,4 +32,10 @@ public class AtomicLogger extends BasicLogger {
         AtomicLogger.priority = priority;
     }
 
+    public static String exceptionToString(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
+    }
 }

@@ -25,6 +25,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
 
 }
+
+compileJava {
+    options.annotationProcessorPath = configurations.annotationProcessor
+}
 test {
     useJUnitPlatform()
 }

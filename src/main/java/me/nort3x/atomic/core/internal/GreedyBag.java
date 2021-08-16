@@ -1,6 +1,7 @@
 package me.nort3x.atomic.core.internal;
 
 import me.nort3x.atomic.logger.AtomicLogger;
+import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicAnnotation;
 import me.nort3x.atomic.wrappers.AtomicType;
 
@@ -13,17 +14,19 @@ public class GreedyBag {
 
     AtomicLogger logger = AtomicLogger.getInstance();
 
-
-    private final ConcurrentHashMap<Class<? extends Annotation>, AtomicAnnotation> annotationsToWrappers = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Class<?>, AtomicType> typesToWrappers = new ConcurrentHashMap<>();
-
-
     protected void load(Class<?> type) {
-        typesToWrappers.computeIfAbsent(type, AtomicType::new);
+        AtomicType at = AtomicType.getOrCreate(type);
+        if (!at.isAtomic())
+            logger.warning("NonAtomicTypeCalled to be loaded, you are facing a bug, please report this", Priority.VERY_IMPORTANT, GreedyBag.class);
     }
 
     public AtomicAnnotation getAtomicAnnotation(Class<? extends Annotation> annotation) {
         return AtomicAnnotation.getOrCreate(annotation);
+    }
+
+    public AtomicType getAtomicType(Class<?> type) {
+        return AtomicType.getOrCreate(type);
+
     }
 
     //// utility ////

@@ -23,8 +23,9 @@ public class AtomicType {
     final Set<AtomicMethod> methodSet;
     Set<AtomicConstructor> constructorSet;
     AtomicMethod postConstructor;
+    AtomicConstructor ngc;
 
-    public AtomicType(Class<?> type) {
+    private AtomicType(Class<?> type) {
         correspondingType = type;
 
         annotationSet = Arrays.stream(correspondingType.getAnnotations()).parallel()
@@ -85,11 +86,20 @@ public class AtomicType {
 
 
             constructorSet = Arrays.stream(type.getConstructors()).parallel()
+                    .peek(x -> x.setAccessible(true))
                     .map(AtomicConstructor::new)
                     .collect(CustomCollector.concurrentSet());
 
+            Optional<AtomicConstructor> ngc_bean = constructorSet.stream().filter(AtomicConstructor::isNoArgConstructor).findFirst();
+            if (!ngc_bean.isPresent()) {
+                logger.fatal("NoArgsConstructor not found for AtomicType: " + type.getName() + " could not generate instance from given Type, any dependent Type will be affected ", Priority.VERY_IMPORTANT, AtomicType.class);
+                System.exit(-1);
+            }
+            ngc = ngc_bean.get();
+
+
             if (constructorSet.parallelStream().noneMatch(AtomicConstructor::isNoArgConstructor))
-                logger.fatal("Declared AtomicType doesnt have NoArgsConstructor it can potentially invoke undefined behaviors", Priority.IMPORTANT, AtomicType.class);
+                logger.fatal("Declared AtomicType: " + type.getName() + " doesnt have NoArgsConstructor it can potentially invoke undefined behaviors", Priority.IMPORTANT, AtomicType.class);
 
 
         } else {
@@ -104,6 +114,10 @@ public class AtomicType {
         if (isPostConstructable)
             return Optional.of(postConstructor);
         return Optional.empty();
+    }
+
+    public AtomicConstructor getNoArgsConstructor() {
+        return ngc;
     }
 
     public static AtomicLogger getLogger() {
@@ -144,5 +158,12 @@ public class AtomicType {
     @Override
     public int hashCode() {
         return correspondingType.hashCode();
+    }
+
+
+    private static final ConcurrentHashMap<Class<?>, AtomicType> alreadyScannedTypesAtomicTypes = new ConcurrentHashMap<>();
+
+    public static AtomicType getOrCreate(Class<?> clazz) {
+        return alreadyScannedTypesAtomicTypes.computeIfAbsent(clazz, AtomicType::new);
     }
 }

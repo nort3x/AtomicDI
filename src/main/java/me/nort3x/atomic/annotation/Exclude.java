@@ -9,5 +9,6 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.CONSTRUCTOR})
 @Documented
 @Inherited
+@Atomic
 public @interface Exclude {
 }

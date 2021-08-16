@@ -1,7 +1,9 @@
-import DummyTestPackage2.Pointer2;
+import Package1.ClassOne;
 import me.nort3x.atomic.core.AtomicDI;
+import me.nort3x.atomic.core.container.Container;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.wrappers.AtomicType;
 import org.junit.jupiter.api.Test;
 
 public class ScanningTest {
@@ -9,8 +11,11 @@ public class ScanningTest {
     void willScanPackageAndSubPackages() throws InterruptedException {
         AtomicLogger.setVerbosityLevel(Priority.DEBUG);
         AtomicDI a = new AtomicDI();
-        a.getResolver().resolve(Pointer2.class);
+        a.resolve(ClassOne.class);
         //Assertions.assertEquals(2, a.getGreedyBag().getTypesAnnotations().size());
+        Container c = Container.makeContainerAround(AtomicType.getOrCreate(ClassOne.class));
+
+        c.get(AtomicType.getOrCreate(ClassOne.class));
 
         Thread.sleep(1000);
     }

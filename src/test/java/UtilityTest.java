@@ -1,7 +1,7 @@
 import me.nort3x.atomic.core.internal.GreedyBag;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -39,9 +39,7 @@ public class UtilityTest {
     @Test
     void shouldNotStackOverFlow() {
 
-        Set<String> h = new HashSet<>();
-        h.add("123");
-        Assertions.assertTrue(h.contains("123"));
+        System.out.println(Arrays.toString("123;4".split(";")));
 
     }
 }

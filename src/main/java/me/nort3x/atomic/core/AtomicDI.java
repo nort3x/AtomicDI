@@ -14,15 +14,14 @@ public class AtomicDI {
         rs = new Resolver(gb);
     }
 
-
     private final static AtomicDI instance = new AtomicDI();
 
     public static AtomicDI getInstance() {
         return instance;
     }
 
-    public Resolver getResolver() {
-        return rs;
+    public void resolve(Class<?> point) {
+        rs.resolve(point);
     }
 
     public GreedyBag getGreedyBag() {

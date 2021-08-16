@@ -1,13 +1,11 @@
 package me.nort3x.atomic.wrappers;
 
-import me.nort3x.atomic.annotation.Atom;
-import me.nort3x.atomic.annotation.Atomic;
-import me.nort3x.atomic.annotation.Exclude;
-import me.nort3x.atomic.annotation.Interaction;
+import me.nort3x.atomic.annotation.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +15,7 @@ public class AtomicAnnotation {
     Class<? extends Annotation> correspondingAnnotation;
     Set<Class<? extends Annotation>> annotationSet;
 
-    boolean isAtomic, isInterAction, isExcluded, isAtom;
+    boolean isAtomic, isInterAction, isExcluded, isAtom, isPredefined;
 
 
     private AtomicAnnotation(Class<? extends Annotation> correspondingAnnotation) {
@@ -33,6 +31,7 @@ public class AtomicAnnotation {
         isAtom = annotationSet.contains(Atom.class) || correspondingAnnotation.equals(Atom.class);
         isInterAction = annotationSet.contains(Interaction.class) || correspondingAnnotation.equals(Interaction.class);
         isExcluded = annotationSet.contains(Exclude.class) || correspondingAnnotation.equals(Exclude.class);
+        isPredefined = annotationSet.contains(Predefined.class) || correspondingAnnotation.equals(Predefined.class);
 
 
 //        isAtomic      = correspondingAnnotation.isAnnotationPresent(Atomic.class)      || correspondingAnnotation.equals(Atomic.class     );
@@ -81,6 +80,10 @@ public class AtomicAnnotation {
 
     public boolean isAtom() {
         return isAtom;
+    }
+
+    public boolean isPredefined() {
+        return isPredefined;
     }
 
     public Class<? extends Annotation> getCorrespondingAnnotation() {
@@ -148,6 +151,22 @@ public class AtomicAnnotation {
                 .map(Annotation::annotationType)
                 .map(AtomicAnnotation::new)
                 .map(AtomicAnnotation::isExcluded)
+                .reduce(false, Boolean::logicalOr);
+    }
+
+    public static boolean isPredefined(Field f) {
+        return Arrays.stream(f.getAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::new)
+                .map(AtomicAnnotation::isPredefined)
+                .reduce(false, Boolean::logicalOr);
+    }
+
+    public static boolean isPredefined(Parameter p) {
+        return Arrays.stream(p.getAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::new)
+                .map(AtomicAnnotation::isPredefined)
                 .reduce(false, Boolean::logicalOr);
     }
 
