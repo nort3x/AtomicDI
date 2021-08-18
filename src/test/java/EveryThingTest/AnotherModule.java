@@ -8,7 +8,8 @@ import me.nort3x.atomic.core.AtomicEnvironment;
 
 @Atomic
 public class AnotherModule extends AtomicModule {
-    @Atom MainModule mainModule;
+    @Atom(concreteType = MainModule.class)
+    AtomicModule mainModule;
     @Override
     public String getName() {
         return "OtherModule";
@@ -26,7 +27,7 @@ public class AnotherModule extends AtomicModule {
 
     @Override
     public void whenModuleStarted(AtomicEnvironment atomicEnvironment) {
-            System.out.println(mainModule.mainModuleIsOneAfterScanned());
+        System.out.println(((MainModule) mainModule).mainModuleIsOneAfterScanned());
     }
 
     @Override

@@ -176,4 +176,8 @@ public final class AtomicType {
     public boolean isSubOf(AtomicType atomicType1) {
         return atomicType1.correspondingType.isAssignableFrom(correspondingType);
     }
+
+    public boolean isSuperFor(AtomicType atomicType1) {
+        return correspondingType.isAssignableFrom(atomicType1.correspondingType);
+    }
 }

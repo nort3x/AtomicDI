@@ -1,5 +1,6 @@
 package me.nort3x.atomic.core.container;
 
+import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.core.integrator.PredefinedLoader;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
@@ -28,7 +29,13 @@ public class Configurator {
         atomicType.getFieldSet().parallelStream()
                 .forEach(field -> {
                     fieldSetters.addReaction(new Consumer<TupleOfInstanceAndContainerMap>() {
-                        final AtomicType at = AtomicType.of(field.getType()); // cache for faster lookup
+                        // cache for faster lookup
+                        final AtomicType at;
+
+                        {
+                            Class<?> conType = field.getCorrespondingField().getAnnotation(Atom.class).concreteType();
+                            at = AtomicType.of(conType.equals(Object.class) ? field.getType() : conType);
+                        }
 
                         @Override
                         public void accept(TupleOfInstanceAndContainerMap tp) {

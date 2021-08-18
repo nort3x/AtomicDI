@@ -5,7 +5,6 @@ import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicField;
-import me.nort3x.atomic.wrappers.AtomicMethod;
 import me.nort3x.atomic.wrappers.AtomicType;
 
 import java.util.Objects;
@@ -38,7 +37,13 @@ public class Container {
         this.internalSet = closedSetOfTypes;
 
         // create all
-        closedSetOfTypes.stream() // for types
+        makeAndAddInstance(closedSetOfTypes);
+        closedSetOfTypes.parallelStream().forEach(type -> Configurator.configAndGet(type.type, instances, this));
+
+    }
+
+    private void makeAndAddInstance(Set<AtomFieldSchematic> set) {
+        set.stream() // for types
                 .filter(atomicType -> {
                     if (atomicType.type.getNoArgsConstructor() != null) // if no argsConstructor exist
                         return true;
@@ -46,21 +51,13 @@ public class Container {
                     return false;
                 })
                 .forEach(atomicType -> {
-                            if (atomicType.atomScope == Atom.Scope.PER_CONTAINER)
-                                instances.put(atomicType.type, createInstance(atomicType.type));
-                            else if (atomicType.atomScope == Atom.Scope.GLOBAL) {
+                    if (atomicType.atomScope == Atom.Scope.PER_CONTAINER)
+                        instances.put(atomicType.type, createInstance(atomicType.type));
+                    else if (atomicType.atomScope == Atom.Scope.GLOBAL) {
                                 instances.put(atomicType.type, sharedCrossEveryOne.computeIfAbsent(atomicType.type, this::createInstance));
                             }
                         }
                 );
-
-        // wire all
-        //        closedSetOfTypes.parallelStream()
-        //                .forEach(atomicType -> atomicType.type.getFieldSet().parallelStream()
-        //                        .forEach(atomicField -> atomicField.setField(instances.get(atomicType), instances.get(AtomicType.of(atomicField.getType())))));
-
-        closedSetOfTypes.parallelStream().forEach(type -> Configurator.configAndGet(type.type, instances, this));
-
     }
 
 
@@ -91,27 +88,6 @@ public class Container {
                 });
     }
 
-
-    @Deprecated
-    protected Object[] provideAsParameterForMethod(AtomicMethod method) {
-        return method.getParameterSet().parallelStream()
-                .map(param -> AtomicType.of(param.getType()))
-                .peek(this::growToContain)
-                .map(instances::get)
-                .toArray();
-    }
-
-
-    @Deprecated
-    void growToContain(AtomicType atomicType) {
-        // get everything else
-        Set<AtomFieldSchematic> appendableSet = makeContainerRelationSet(atomicType);
-        appendableSet.removeAll(internalSet);
-
-        // make instances and wireUps:
-        // todo
-
-    }
 
     public static Container makeContainerAround(AtomicType atomicType) {
         return new Container(alreadyScanned.computeIfAbsent(atomicType, Container::makeContainerRelationSet), atomicType);
@@ -158,20 +134,26 @@ public class Container {
         atomicType.getFieldSet().parallelStream()
                 .filter(AtomicField::isAtom)
                 .filter(atomicField -> !atomicField.isPredefined())
-                .map(field -> new AtomFieldSchematic(
-                        field.getCorrespondingField().getAnnotation(Atom.class).scope(),
-                        AtomicType.of(field.getType())
-                ))
-                .peek(field->{
-                    if(field.type.isSubOf(AtomicType.of(AtomicModule.class))){ // overriding scope in case of module
-                        if(!field.atomScope.equals(Atom.Scope.GLOBAL))
+                .map(field -> {
+                    Atom anon = field.getCorrespondingField().getAnnotation(Atom.class);
+                    AtomicType type = anon.concreteType().equals(Object.class) ?
+                            AtomicType.of(field.getType()) :
+                            AtomicType.of(anon.concreteType());
+
+                    if (!anon.concreteType().equals(Object.class)) {
+                        addMutualDependenciesRecursive(type, fillThisSet);
+                    }
+
+                    Atom.Scope scope = anon.scope();
+                    return new AtomFieldSchematic(anon.scope(), type);
+                })
+                .peek(field -> {
+                    if (field.type.isSubOf(AtomicType.of(AtomicModule.class))) { // overriding scope in case of module
+                        if (!field.atomScope.equals(Atom.Scope.GLOBAL))
                             AtomicLogger.getInstance().warning("Atom Field of Type AtomicModule can Only be Scoped Global, overriding scope of Field: " + field.type.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
                         field.atomScope = Atom.Scope.GLOBAL;
                     }
                 })
-//                .map(AtomicField::getCorrespondingField)
-//                .map(Field::getType)
-//                .map(AtomicType::of)
                 .forEach(subAtom -> {
                     if (!fillThisSet.contains(subAtom)) {
                         fillThisSet.add(subAtom);

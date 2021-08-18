@@ -7,6 +7,38 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BasicLogger {
+    static final boolean useANSI;
+
+    static {
+        if (System.console() != null && System.getenv().get("TERM") != null || true) { // if system supports ANSI // for know :)
+            Resources.Error_Prefix = Color.color(Resources.Error_Prefix, Color.ANSI_RED);
+            Resources.Warning_Prefix = Color.color(Resources.Warning_Prefix, Color.ANSI_YELLOW);
+            Resources.Log_Prefix = Color.color(Resources.Log_Prefix, Color.ANSI_GREEN);
+            useANSI = true;
+        } else
+            useANSI = false;
+
+
+        String banner =
+                "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⢿⣻⣫⢯⣗⣗⣗⣗⣗⡷⡽⣝⡯⣟⢿⢿⣿⣿⣿⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣿⢿⢝⣞⣗⢷⡽⣽⣺⣳⢯⣾⣺⡽⣽⣳⢯⢯⢯⢯⢞⢿⢿⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⢿⣕⡯⣟⣞⡾⣽⢽⣳⣟⣾⣻⣞⣷⣻⣽⣞⣯⢿⡽⣽⢽⢽⢵⣻⣿⣿⣿\n" +
+                        "\t\t⣿⣿⢯⣳⣳⢽⣳⢯⡯⣿⣽⣻⡾⣷⢿⣞⣿⣞⣷⣟⣾⢯⣯⢷⣻⡽⣳⢧⡻⣿⣿\n" +
+                        "\t\t⣿⣏⣗⢷⢽⡽⣞⣯⣿⣳⢟⣷⢿⣻⣽⣟⣾⣻⣾⣻⢾⢿⣞⣯⣷⣻⢽⣳⣝⣝⣿\n" +
+                        "\t\t⣿⣺⣪⢿⢽⡽⣯⢷⡯⢐⠄⠄⣻⣟⣷⢿⣽⣻⡞⠠⡂⠄⢻⣗⣷⢯⣟⣞⡮⣖⣿\n" +
+                        "\t\t⣿⡺⣺⢽⢯⣻⣽⢯⣧⠐⠐⡀⣺⣽⣾⢿⣽⣯⣇⢐⠠⠈⣼⣟⣾⣻⣺⣵⡻⡮⣿\n" +
+                        "\t\t⣿⡺⡽⡽⡯⣷⣻⣻⣽⣾⣲⢾⣽⢷⣟⣿⣳⣯⡿⣶⢶⣽⣻⣾⣳⡯⣷⡳⣯⡳⣻\n" +
+                        "\t\t⣿⡺⣝⡯⡿⡽⣞⣯⣷⢿⣽⢿⣽⢿⣽⢷⣟⣷⢿⣻⡿⣽⢷⣻⢾⣽⣳⢯⣗⢝⣿\n" +
+                        "\t\t⣿⣝⣞⡽⡽⡯⣟⣷⠉⡁⠅⠡⠁⠅⠡⠁⠅⠡⢉⠨⠈⠌⡉⣿⢽⣞⣞⣗⡗⣽⣿\n" +
+                        "\t\t⣿⣿⡼⣺⢽⢯⣟⣞⡷⡶⡾⡶⣷⢾⡶⣷⢾⣶⢶⣶⢷⡶⡾⣽⢽⣺⢞⡞⣼⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣮⢯⣳⡳⡯⡯⣟⣟⣯⢿⡽⣯⣟⣿⣺⡯⣯⡯⣯⢿⢽⢽⡺⡹⣼⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣷⣧⡫⡯⡯⣗⣟⡾⣽⢽⣳⢯⢾⣺⢽⣳⢯⢯⢯⢏⢇⣿⣾⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣾⣽⣕⡳⡫⣗⢟⢾⣝⢯⢯⢻⢪⡫⣽⣼⣾⣿⣿⣿⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣾⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n" +
+                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿";
+        System.out.println(banner);
+    }
 
     final ExecutorService printThread = Executors.newSingleThreadExecutor();
     final private PrintStream ps;
@@ -19,8 +51,13 @@ public class BasicLogger {
 
     private void print(String prefix, String s, Priority priority) {
         printThread.submit(() -> {
-            if (BasicLogger.this.priority.comparable <= priority.comparable)
-                ps.println(prefix + Instant.now().toString() + " " + s);
+            if (BasicLogger.this.priority.comparable <= priority.comparable) {
+                if (!useANSI)
+                    ps.println(prefix + Instant.now().toString() + " " + s);
+                else
+                    ps.println(new Color.Rainbow().append(prefix).of(Instant.now().toString(), Color.ANSI_YELLOW)
+                            .append(" ").append(s).toString());
+            }
         });
     }
 
@@ -49,8 +86,10 @@ public class BasicLogger {
     }
 
     private String forgeName(Class<?> c) {
-        return "[" +
+        String s = "[" +
                 (c.isAnonymousClass() ? "AnonymousType - " + c.getName() : c.getSimpleName())
                 + "] ";
+
+        return useANSI ? Color.color(s, Color.ANSI_BLUE) : s;
     }
 }
