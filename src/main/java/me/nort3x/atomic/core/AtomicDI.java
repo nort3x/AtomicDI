@@ -2,17 +2,23 @@ package me.nort3x.atomic.core;
 
 import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.core.container.Container;
+import me.nort3x.atomic.core.integrator.PredefinedLoader;
 import me.nort3x.atomic.core.internal.GreedyBag;
 import me.nort3x.atomic.core.internal.Resolver;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicType;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Stream;
+
+import static me.nort3x.atomic.core.integrator.PredefinedLoader.addDefinitionFile;
 
 public class AtomicDI {
 
@@ -24,6 +30,17 @@ public class AtomicDI {
         gb = new GreedyBag();
         rs = new Resolver(gb);
         atomicEnvironment = new AtomicEnvironment();
+        try {
+            URL url = PredefinedLoader.class.getClassLoader().getResource("AtomicDI.ini");
+            if (url != null) {
+                File resourceFile = new File(url.toURI());
+                addDefinitionFile(resourceFile);
+            }
+            File pathFile = new File("AtomicDI.ini");
+            addDefinitionFile(pathFile);
+        } catch (URISyntaxException | IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private final static AtomicDI instance = new AtomicDI();

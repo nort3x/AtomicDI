@@ -33,7 +33,12 @@ public class Configurator {
                         final AtomicType at;
 
                         {
-                            Class<?> conType = field.getCorrespondingField().getAnnotation(Atom.class).concreteType();
+                            Atom anon = field.getCorrespondingField().getAnnotation(Atom.class);
+                            Class<?> conType;
+                            if (anon == null)
+                                conType = Object.class;
+                            else
+                                conType = anon.concreteType();
                             at = AtomicType.of(conType.equals(Object.class) ? field.getType() : conType);
                         }
 
