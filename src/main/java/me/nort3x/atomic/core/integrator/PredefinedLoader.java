@@ -54,7 +54,7 @@ public class PredefinedLoader {
                     if (values.containsKey(key_value[0])) {
                         AtomicLogger.getInstance().warning("Entry: " + entry + " in DefinitionFile: " + f + " is going tp replace already-existing Entry: " + values.get(key_value[0]).toString(), Priority.VERBOSE, PredefinedLoader.class);
                     }
-                    AtomicLogger.getInstance().warning("Key: " + key_value[0] + " associated with: " + key_value[1] + " from Predefined ini File: " + f, Priority.VERBOSE, PredefinedLoader.class);
+                    AtomicLogger.getInstance().info("Key: " + key_value[0] + " associated with: " + key_value[1] + " from Predefined ini File: " + f, Priority.VERBOSE, PredefinedLoader.class);
                     values.put(key_value[0].trim(), new Value(key_value[0].trim(), key_value[1].trim()));
                 });
     }

@@ -45,7 +45,7 @@ public class Configurator {
             postConfig.invoke(tupleOfInstanceAndContainerMap.obj, exp -> {
                 AtomicLogger.getInstance().warning("PostConfiguration: " + atomicType.getCorrespondingType().getName() + "." + postConfig.getCorrespondingMethod().getName()
                         + " Thrown Exception: " + AtomicLogger.exceptionToString(exp), Priority.IMPORTANT, Configurator.class);
-            }, container.provideAsParameterForMethod(postConfig));
+            });
         }));
 
     }

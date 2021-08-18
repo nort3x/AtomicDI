@@ -162,8 +162,18 @@ public final class AtomicType {
 
 
     private static final ConcurrentHashMap<Class<?>, AtomicType> alreadyScannedTypesAtomicTypes = new ConcurrentHashMap<>();
-
+    public static ConcurrentHashMap<Class<?>, AtomicType> getAlreadyScannedTypesAtomicTypes(){
+        return alreadyScannedTypesAtomicTypes;
+    }
     public static AtomicType of(Class<?> clazz) {
         return alreadyScannedTypesAtomicTypes.computeIfAbsent(clazz, AtomicType::new);
+    }
+
+    public boolean isAnnotationPresent(AtomicAnnotation atomicAnnotation) {
+        return annotationSet.stream().anyMatch(atomicAnnotation1 -> atomicAnnotation1.isAssignableFrom(atomicAnnotation));
+    }
+
+    public boolean isSubOf(AtomicType atomicType1) {
+        return atomicType1.correspondingType.isAssignableFrom(correspondingType);
     }
 }

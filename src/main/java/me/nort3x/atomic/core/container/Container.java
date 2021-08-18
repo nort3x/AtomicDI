@@ -1,6 +1,7 @@
 package me.nort3x.atomic.core.container;
 
 import me.nort3x.atomic.annotation.Atom;
+import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicField;
@@ -88,10 +89,10 @@ public class Container {
                     AtomicLogger.getInstance().fatal("AtomicCreation Failed for AtomicType: " + type.getCorrespondingType().getName() + " in Container around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
                     return null;
                 });
-
     }
 
 
+    @Deprecated
     protected Object[] provideAsParameterForMethod(AtomicMethod method) {
         return method.getParameterSet().parallelStream()
                 .map(param -> AtomicType.of(param.getType()))
@@ -101,6 +102,7 @@ public class Container {
     }
 
 
+    @Deprecated
     void growToContain(AtomicType atomicType) {
         // get everything else
         Set<AtomFieldSchematic> appendableSet = makeContainerRelationSet(atomicType);
@@ -160,6 +162,13 @@ public class Container {
                         field.getCorrespondingField().getAnnotation(Atom.class).scope(),
                         AtomicType.of(field.getType())
                 ))
+                .peek(field->{
+                    if(field.type.isSubOf(AtomicType.of(AtomicModule.class))){ // overriding scope in case of module
+                        if(!field.atomScope.equals(Atom.Scope.GLOBAL))
+                            AtomicLogger.getInstance().warning("Atom Field of Type AtomicModule can Only be Scoped Global, overriding scope of Field: " + field.type.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+                        field.atomScope = Atom.Scope.GLOBAL;
+                    }
+                })
 //                .map(AtomicField::getCorrespondingField)
 //                .map(Field::getType)
 //                .map(AtomicType::of)

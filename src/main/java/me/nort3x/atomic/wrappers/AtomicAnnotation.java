@@ -170,4 +170,7 @@ public final class AtomicAnnotation {
     }
 
 
+    public boolean isAssignableFrom(AtomicAnnotation atomicAnnotation) {
+        return annotationSet.parallelStream().anyMatch(x->x.equals(atomicAnnotation.getCorrespondingAnnotation()));
+    }
 }
