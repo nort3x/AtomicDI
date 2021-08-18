@@ -1,9 +1,8 @@
-# Atomic-DI
-
+#  Atomic-DI
 [![CodeFactor](https://www.codefactor.io/repository/github/nort3x/atomicdi/badge/master)](https://www.codefactor.io/repository/github/nort3x/atomicdi/overview/master)
 [![](https://jitpack.io/v/nort3x/AtomicDI.svg)](https://jitpack.io/#nort3x/AtomicDI)
 
-Atomic is lightweight, flexible, fast and fast DI framework <br/>
+Atomic is lightweight,  flexible, fast and fast  DI framework <br/>
 based around concurrent lookups and in-memory caching<br/>
 it will provide a simple but rich API<br/>
 take a look:
@@ -66,8 +65,8 @@ class Beans{
 
 ```
 
-## Features
 
+## Features
 <ul>
     <li>Small and Flexible DI framework</li>
     <li>Fully Extendable and injectable</li>
@@ -81,13 +80,13 @@ class Beans{
 </ul>
 
 ## Examples
-
 + [AtomicJDA](https://github.com/nort3x/AtomicJDA) - AtomicDI approach for developing Discord Bot(s)
+
+
 
 ## Installation
 
 ### gradle
-
 Add it in your root build.gradle at the end of repositories: (if not already!)
 
 ```gradle
