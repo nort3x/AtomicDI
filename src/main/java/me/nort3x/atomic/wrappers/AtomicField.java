@@ -15,11 +15,13 @@ public final class AtomicField {
     final Class<?> type;
 
     final boolean isAtomicType;
+    private boolean isAtom = false;
 
     public AtomicField(Field correspondingField) {
         this.correspondingField = correspondingField;
         annotationSet = Arrays.stream(correspondingField.getAnnotations()).parallel()
                 .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
+                .peek(atomicAnnotation -> isAtom |= atomicAnnotation.isAtom())
                 .collect(CustomCollector.concurrentSet());
         this.type = correspondingField.getType();
 
@@ -61,5 +63,9 @@ public final class AtomicField {
     @Override
     public int hashCode() {
         return correspondingField.hashCode();
+    }
+
+    public boolean isAtom() {
+        return isAtom;
     }
 }

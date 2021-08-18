@@ -1,11 +1,13 @@
 package me.nort3x.atomic.core.container;
 
+import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicField;
+import me.nort3x.atomic.wrappers.AtomicMethod;
 import me.nort3x.atomic.wrappers.AtomicType;
 
-import java.lang.reflect.Field;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +19,7 @@ in other sense Container is the smallest Set of instances such that X can functi
 public class Container {
 
     // statically caching internal creator Set for later calls
-    private static final ConcurrentHashMap<AtomicType, Set<AtomicType>> alreadyScanned = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<AtomicType, Set<AtomFieldSchematic>> alreadyScanned = new ConcurrentHashMap<>();
 
     // holding instances each corresponding to on Element of Container
     private final ConcurrentHashMap<AtomicType, Object> instances = new ConcurrentHashMap<>();
@@ -25,26 +27,38 @@ public class Container {
     // preserver instance of central element this Container is describing
     final AtomicType formedAround;
 
+    private static final ConcurrentHashMap<AtomicType, Object> sharedCrossEveryOne = new ConcurrentHashMap<>();
+    private final Set<AtomFieldSchematic> internalSet;
 
     // a Container is formed when all of its elements are working
-    private Container(Set<AtomicType> closedSetOfTypes, AtomicType formedAround) {
+    private Container(Set<AtomFieldSchematic> closedSetOfTypes, AtomicType formedAround) {
 
         this.formedAround = formedAround;
+        this.internalSet = closedSetOfTypes;
 
         // create all
         closedSetOfTypes.stream() // for types
                 .filter(atomicType -> {
-                    if (atomicType.getNoArgsConstructor() != null) // if no argsConstructor exist
+                    if (atomicType.type.getNoArgsConstructor() != null) // if no argsConstructor exist
                         return true;
-                    AtomicLogger.getInstance().fatal("AtomicType: " + atomicType.getCorrespondingType().getName() + "has NoArgsConstructor", Priority.VERY_IMPORTANT, Container.class);
+                    AtomicLogger.getInstance().fatal("AtomicType: " + atomicType.type.getCorrespondingType().getName() + "has NoArgsConstructor", Priority.VERY_IMPORTANT, Container.class);
                     return false;
                 })
-                .forEach(atomicType -> instances.put(atomicType, createInstance(atomicType)));
+                .forEach(atomicType -> {
+                            if (atomicType.atomScope == Atom.Scope.PER_CONTAINER)
+                                instances.put(atomicType.type, createInstance(atomicType.type));
+                            else if (atomicType.atomScope == Atom.Scope.GLOBAL) {
+                                instances.put(atomicType.type, sharedCrossEveryOne.computeIfAbsent(atomicType.type, this::createInstance));
+                            }
+                        }
+                );
 
         // wire all
-        closedSetOfTypes.parallelStream()
-                .forEach(atomicType -> atomicType.getFieldSet().parallelStream()
-                        .forEach(atomicField -> atomicField.setField(instances.get(atomicType), instances.get(AtomicType.of(atomicField.getType())))));
+        //        closedSetOfTypes.parallelStream()
+        //                .forEach(atomicType -> atomicType.type.getFieldSet().parallelStream()
+        //                        .forEach(atomicField -> atomicField.setField(instances.get(atomicType), instances.get(AtomicType.of(atomicField.getType())))));
+
+        closedSetOfTypes.parallelStream().forEach(type -> Configurator.configAndGet(type.type, instances, this));
 
     }
 
@@ -78,6 +92,25 @@ public class Container {
     }
 
 
+    protected Object[] provideAsParameterForMethod(AtomicMethod method) {
+        return method.getParameterSet().parallelStream()
+                .map(param -> AtomicType.of(param.getType()))
+                .peek(this::growToContain)
+                .map(instances::get)
+                .toArray();
+    }
+
+
+    void growToContain(AtomicType atomicType) {
+        // get everything else
+        Set<AtomFieldSchematic> appendableSet = makeContainerRelationSet(atomicType);
+        appendableSet.removeAll(internalSet);
+
+        // make instances and wireUps:
+        // todo
+
+    }
+
     public static Container makeContainerAround(AtomicType atomicType) {
         return new Container(alreadyScanned.computeIfAbsent(atomicType, Container::makeContainerRelationSet), atomicType);
     }
@@ -87,22 +120,52 @@ public class Container {
      * @return a set of every atomic element root will need for functioning
      * Authored, by Kemikals
      */
-    private static Set<AtomicType> makeContainerRelationSet(AtomicType type) {
-        Set<AtomicType> containerRelationSet = ConcurrentHashMap.newKeySet(); // make relation set
-        containerRelationSet.add(type);                                      // add 'root' type to it
+    private static Set<AtomFieldSchematic> makeContainerRelationSet(AtomicType type) {
+        Set<AtomFieldSchematic> containerRelationSet = ConcurrentHashMap.newKeySet(); // make relation set
+        containerRelationSet.add(new AtomFieldSchematic(Atom.Scope.PER_CONTAINER, type));                                      // add 'root' type to it
         addMutualDependenciesRecursive(type, containerRelationSet);          // add everything else respect to root recursively (it modifies set)
         return containerRelationSet;                                         // return respectively
     }
 
-    private static void addMutualDependenciesRecursive(AtomicType atomicType, Set<AtomicType> fillThisSet) {
+    private static class AtomFieldSchematic {
+
+        Atom.Scope atomScope;
+        AtomicType type;
+
+        public AtomFieldSchematic(Atom.Scope scope, AtomicType type) {
+            this.atomScope = scope;
+            this.type = type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof AtomFieldSchematic)) return false;
+            AtomFieldSchematic that = (AtomFieldSchematic) o;
+            return atomScope == that.atomScope && Objects.equals(type, that.type);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(atomScope, type);
+        }
+
+    }
+
+    private static void addMutualDependenciesRecursive(AtomicType atomicType, Set<AtomFieldSchematic> fillThisSet) {
         atomicType.getFieldSet().parallelStream()
-                .map(AtomicField::getCorrespondingField)
-                .map(Field::getType)
-                .map(AtomicType::of)
+                .filter(AtomicField::isAtom)
+                .map(field -> new AtomFieldSchematic(
+                        field.getCorrespondingField().getAnnotation(Atom.class).scope(),
+                        AtomicType.of(field.getType())
+                ))
+//                .map(AtomicField::getCorrespondingField)
+//                .map(Field::getType)
+//                .map(AtomicType::of)
                 .forEach(subAtom -> {
                     if (!fillThisSet.contains(subAtom)) {
                         fillThisSet.add(subAtom);
-                        addMutualDependenciesRecursive(subAtom, fillThisSet);
+                        addMutualDependenciesRecursive(subAtom.type, fillThisSet);
                     }
                 });
     }

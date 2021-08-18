@@ -3,9 +3,12 @@ package me.nort3x.atomic.wrappers;
 import me.nort3x.atomic.annotation.PostConstruction;
 import me.nort3x.atomic.utility.CustomCollector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class AtomicMethod {
     final Method correspondingMethod;
@@ -16,6 +19,7 @@ public final class AtomicMethod {
     final boolean hasAtomicOutput;
 
     public AtomicMethod(Method correspondingMethod) {
+        correspondingMethod.setAccessible(true);
         this.correspondingMethod = correspondingMethod;
         this.parameterSet = Arrays.stream(correspondingMethod.getParameters()).parallel()
                 .map(AtomicParameter::new)
@@ -24,6 +28,7 @@ public final class AtomicMethod {
                 .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .collect(CustomCollector.concurrentSet());
         this.outputType = correspondingMethod.getReturnType();
+
         isPostConstruct = this.annotationSet.contains(AtomicAnnotation.of(PostConstruction.class));
         hasAtomicOutput = AtomicAnnotation.isAtomic(this.outputType);
     }
@@ -62,6 +67,15 @@ public final class AtomicMethod {
 
     public boolean isPostConstructor() {
         return isPostConstruct;
+    }
+
+    public Optional<?> invoke(Object object, Consumer<Exception> exceptionConsumer, Object... params) {
+        try {
+            return Optional.ofNullable(getCorrespondingMethod().invoke(object, params));
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            exceptionConsumer.accept(e);
+            return Optional.empty();
+        }
     }
 
 }

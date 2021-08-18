@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
-// todo
 public class PredefinedLoader {
 
 

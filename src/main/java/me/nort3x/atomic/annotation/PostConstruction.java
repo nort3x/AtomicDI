@@ -21,8 +21,6 @@ import java.lang.annotation.*;
  *        }
  *     </code>
  * </pre>
- * <p>
- * <p>
  * Cyclic dependency is not resolved in this version, using this carelessly cam result in NPE
  */
 @Target(ElementType.METHOD)

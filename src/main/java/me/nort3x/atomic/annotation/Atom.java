@@ -27,12 +27,12 @@ import java.lang.annotation.*;
 @Atomic
 public @interface Atom {
 
-    enum Type {
-        Shared,
-        Unique
+    enum Scope {
+        GLOBAL,
+        PER_CONTAINER
     }
 
-    Type type() default Type.Shared;
+    Scope scope() default Scope.GLOBAL;
 
     /**
      * when subclasses of annotated Atomic exist specify type explicitly

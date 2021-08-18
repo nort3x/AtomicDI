@@ -1,2 +1,3 @@
 rootProject.name = 'AtomicDI'
+include 'Processor'
 
