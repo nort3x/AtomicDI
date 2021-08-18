@@ -155,6 +155,7 @@ public class Container {
     private static void addMutualDependenciesRecursive(AtomicType atomicType, Set<AtomFieldSchematic> fillThisSet) {
         atomicType.getFieldSet().parallelStream()
                 .filter(AtomicField::isAtom)
+                .filter(atomicField -> !atomicField.isPredefined())
                 .map(field -> new AtomFieldSchematic(
                         field.getCorrespondingField().getAnnotation(Atom.class).scope(),
                         AtomicType.of(field.getType())

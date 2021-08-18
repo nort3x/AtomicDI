@@ -1,5 +1,6 @@
 package me.nort3x.atomic.core.container;
 
+import me.nort3x.atomic.core.integrator.PredefinedLoader;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.reactor.LinearReactor;
@@ -31,7 +32,11 @@ public class Configurator {
 
                         @Override
                         public void accept(TupleOfInstanceAndContainerMap tp) {
-                            field.setField(tp.obj, tp.map.get(at));
+                            if (field.isPredefined()) {
+                                PredefinedLoader.setPredefinedValue(field, tp.obj);
+                            } else {
+                                field.setField(tp.obj, tp.map.get(at));
+                            }
                         }
                     });
                 });

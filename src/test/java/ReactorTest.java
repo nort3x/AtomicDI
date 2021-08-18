@@ -2,13 +2,14 @@ import me.nort3x.atomic.reactor.AbstractSaverReactor;
 import me.nort3x.atomic.reactor.LinearReactor;
 import me.nort3x.atomic.reactor.ParallelReactor;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -88,6 +89,7 @@ public class ReactorTest {
 
     @DisplayName("will test difference in linear and parallel reactors , might fail from linear behavior of parallel reactor")
     @Test
+    @Disabled
     void shouldAssembleSomethingForMeLinearVsParallel() {
         LinearReactor<Vector3> reactor1 = new LinearReactor<>();
 
@@ -159,13 +161,11 @@ public class ReactorTest {
 
         AbstractSaverReactor<String> badReactor = new LinearReactor<>(); // or Parallel Reactor no one gives a shit in this test
 
-
         int totalMissed = 0;
 
 
         List<Thread> threads = new ArrayList<>();
 
-        long nanos_1 = System.nanoTime();
         for (int j = 0; j < 100; j++) {
 
             // cleanup
@@ -176,9 +176,14 @@ public class ReactorTest {
             for (int i = 0; i < 600; i++) { // lets first be `linear` its just 300 reactions adding to reactor one-by-one nothing!
                 threads.add(new Thread(() -> {
                     // job of thread
-                    badReactor.addReaction(s -> {
-                        // nothing just adding!
-                    });
+                    badReactor.addReaction(
+                            new Consumer<String>() {
+                                @Override
+                                public void accept(String s) {
+
+                                }
+                            }
+                    );
                 }));
             }
             // start all
@@ -189,14 +194,11 @@ public class ReactorTest {
             for (Thread thread : threads) {
                 thread.join();
             }
-
             // now check number of reactions:
             totalMissed += 600 - badReactor.getSetOfReactions().size(); // good but remember we need to clean reactions each time! (its like running this test multiple times)
         }
 
 
-        // sometimes i'm just stupid :) 11 sec without synchronized
-        System.out.println(TimeUnit.MILLISECONDS.convert(System.nanoTime() - nanos_1, TimeUnit.NANOSECONDS)); // you should run this test multiple times and mean the value but because we have a bigger for here its almost good enough
         // should you suspect number 2? no you should not! because it doesnt make sense to any other number! and you test again now i'm getting happier!
         Assertions.assertEquals(totalMissed, 0); // so its not concurrent! you cant make reactor in parallel form! lets make it parallel
     }

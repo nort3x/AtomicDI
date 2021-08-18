@@ -16,12 +16,14 @@ public final class AtomicField {
 
     final boolean isAtomicType;
     private boolean isAtom = false;
+    private boolean isPredefined = false;
 
     public AtomicField(Field correspondingField) {
         this.correspondingField = correspondingField;
         annotationSet = Arrays.stream(correspondingField.getAnnotations()).parallel()
                 .map(annotation -> AtomicAnnotation.of(annotation.annotationType()))
                 .peek(atomicAnnotation -> isAtom |= atomicAnnotation.isAtom())
+                .peek(atomicAnnotation -> isPredefined |= atomicAnnotation.isPredefined())
                 .collect(CustomCollector.concurrentSet());
         this.type = correspondingField.getType();
 
@@ -67,5 +69,9 @@ public final class AtomicField {
 
     public boolean isAtom() {
         return isAtom;
+    }
+
+    public boolean isPredefined() {
+        return isPredefined;
     }
 }

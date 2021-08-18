@@ -39,7 +39,7 @@ public class Value {
                 return valueAsString;
             } else if (type.isEnum()) {
                 return Enum.valueOf((Class<Enum>) type, valueAsString);
-            } else if (type.isPrimitive()) {
+            } else if (handlers.containsKey(type)) {
                 return handlers.get(type).apply(valueAsString);
             }
         } catch (Exception e) {
