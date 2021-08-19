@@ -35,11 +35,14 @@ class Java{
     
     @Atom Beans;
     @Atom CoffeMachine;
-    
-    @Exclude BadBeans;
-    @Atom(type=Type.Shared, concreteType=MyImpl.class) Database db;
 
-    @Predifiend(key="Author") String author;
+    @Exclude
+    BadBeans;
+    @Atom(scope = Scope.Shared, concreteType = MyImpl.class)
+    Database db;
+
+    @Predifiend(key = "Author")
+    String author;
     @Predifiend(key="Mode") MyEnumType mode;
     
     @Interaction void beingJava(@Atom Beans newBeans)

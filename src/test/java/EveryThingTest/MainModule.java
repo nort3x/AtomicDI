@@ -2,8 +2,7 @@ package EveryThingTest;
 
 import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.basic.AtomicModule;
-import me.nort3x.atomic.core.AtomicEnvironment;
-import me.nort3x.atomic.wrappers.AtomicType;
+import me.nort3x.atomic.core.internal.AtomicEnvironment;
 
 @Atomic
 public class MainModule extends AtomicModule {
@@ -18,18 +17,17 @@ public class MainModule extends AtomicModule {
     }
 
     @Override
-    public void whenScannedFinished(AtomicEnvironment atomicEnvironment) {
+    public void onModuleLoaded(AtomicEnvironment atomicEnvironment, String[] args) {
         i = 1;
-        System.out.println(AtomicType.of(AnotherModule.class).getAtomicAnnotationIfExist(CustomAnnotation.class).get());
     }
 
     @Override
-    public void whenModuleStarted(AtomicEnvironment atomicEnvironment) {
-            k=1;
+    public void onModuleStart(AtomicEnvironment atomicEnvironment) {
+        k = 1;
     }
 
     @Override
-    public void whenModuleStopped(AtomicEnvironment atomicEnvironment) {
+    public void onModuleStop(AtomicEnvironment atomicEnvironment) {
 
     }
 

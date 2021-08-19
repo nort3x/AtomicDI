@@ -1,4 +1,4 @@
-package me.nort3x.atomic.core;
+package me.nort3x.atomic.core.internal;
 
 import me.nort3x.atomic.core.container.Container;
 import me.nort3x.atomic.utility.CustomCollector;
@@ -157,4 +157,13 @@ public class AtomicEnvironment {
     <T> T generateFromContainer(Class<T> clazz) {
         return clazz.cast(Container.makeContainerAround(AtomicType.of(clazz)).getCentral());
     }
+
+    public Container spawnNewContainer(AtomicType atomicType) {
+        return Container.makeContainerAround(atomicType);
+    }
+
+    public Container spawnNewContainer(Class<?> atomicType) {
+        return Container.makeContainerAround(AtomicType.of(atomicType));
+    }
+
 }

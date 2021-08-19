@@ -2,19 +2,23 @@ package me.nort3x.atomic.basic;
 
 
 import me.nort3x.atomic.annotation.Atomic;
-import me.nort3x.atomic.core.AtomicEnvironment;
+import me.nort3x.atomic.core.internal.AtomicEnvironment;
 
-import java.util.function.Consumer;
-
+/*
+most fundamental block for introducing Module to AtomicDI
+inheritor should implement given methods and annotate
+ */
 @Atomic
 public abstract class AtomicModule {
 
     abstract public String getName();
+
     abstract public int getVersion();
 
+    abstract public void onModuleLoaded(AtomicEnvironment atomicEnvironment, String[] args);
 
-    abstract public void whenScannedFinished(AtomicEnvironment atomicEnvironment);
-    abstract public void whenModuleStarted(AtomicEnvironment atomicEnvironment);
-    abstract public void whenModuleStopped(AtomicEnvironment atomicEnvironment);
+    abstract public void onModuleStart(AtomicEnvironment atomicEnvironment);
+
+    abstract public void onModuleStop(AtomicEnvironment atomicEnvironment);
 
 }

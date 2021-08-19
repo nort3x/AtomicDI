@@ -4,6 +4,7 @@ import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.annotation.Exclude;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.wrappers.AtomicType;
 import org.reflections8.Reflections;
 
 import java.util.Collection;
@@ -13,10 +14,9 @@ import java.util.stream.Collectors;
 public class Resolver {
 
     final AtomicLogger logger = AtomicLogger.getInstance();
-    final GreedyBag gb;
 
-    public Resolver(GreedyBag gb) {
-        this.gb = gb;
+    public Resolver() {
+
     }
 
     public void resolve(Class<?> point) {
@@ -36,7 +36,11 @@ public class Resolver {
 
 
         // resolve annotation of grabbed types
-        grabbedTypes.parallelStream().forEach(gb::load);
+        grabbedTypes.parallelStream().forEach(type -> {
+            AtomicType at = AtomicType.of(type);
+            if (!at.isAtomic())
+                logger.warning("NonAtomicTypeCalled to be loaded, you are facing a bug, please report this", Priority.VERY_IMPORTANT, Resolver.class);
+        });
 
     }
 }

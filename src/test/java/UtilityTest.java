@@ -1,4 +1,3 @@
-import me.nort3x.atomic.core.internal.GreedyBag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -6,6 +5,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static me.nort3x.atomic.utility.Utils.invert;
 
 public class UtilityTest {
     @Test
@@ -29,7 +30,7 @@ public class UtilityTest {
         }});
 
 
-        Map<Integer, Set<String>> dualOfMap1 = GreedyBag.invert(map1);
+        Map<Integer, Set<String>> dualOfMap1 = invert(map1);
 
         System.out.println(map1);
         System.out.println(dualOfMap1);

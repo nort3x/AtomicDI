@@ -26,6 +26,7 @@ public final class AtomicType {
     AtomicConstructor ngc;
 
     private AtomicType(Class<?> type) {
+
         correspondingType = type;
 
         annotationSet = Arrays.stream(correspondingType.getAnnotations()).parallel()
@@ -90,16 +91,14 @@ public final class AtomicType {
                     .map(AtomicConstructor::new)
                     .collect(CustomCollector.concurrentSet());
 
-            Optional<AtomicConstructor> ngc_bean = constructorSet.stream().filter(AtomicConstructor::isNoArgConstructor).findFirst();
-            if (!ngc_bean.isPresent()) {
-                logger.fatal("NoArgsConstructor not found for AtomicType: " + type.getName() + " could not generate instance from given Type, any dependent Type will be affected ", Priority.VERY_IMPORTANT, AtomicType.class);
-                System.exit(-1);
+            if (!(type.isInterface() || type.isAnnotation() || Modifier.isAbstract(type.getModifiers()))) {
+                Optional<AtomicConstructor> ngc_bean = constructorSet.stream().filter(AtomicConstructor::isNoArgConstructor).findFirst();
+                if (!ngc_bean.isPresent()) {
+                    logger.fatal("NoArgsConstructor not found for AtomicType: " + type.getName() + " could not generate instance from given Type, any dependent Type will be affected ", Priority.VERY_IMPORTANT, AtomicType.class);
+                    System.exit(-1);
+                }
+                ngc = ngc_bean.get();
             }
-            ngc = ngc_bean.get();
-
-
-            if (constructorSet.parallelStream().noneMatch(AtomicConstructor::isNoArgConstructor))
-                logger.fatal("Declared AtomicType: " + type.getName() + " doesnt have NoArgsConstructor it can potentially invoke undefined behaviors", Priority.IMPORTANT, AtomicType.class);
 
 
         } else {
