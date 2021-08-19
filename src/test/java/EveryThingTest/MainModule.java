@@ -3,8 +3,7 @@ package EveryThingTest;
 import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.core.AtomicEnvironment;
-
-import java.util.function.Consumer;
+import me.nort3x.atomic.wrappers.AtomicType;
 
 @Atomic
 public class MainModule extends AtomicModule {
@@ -20,7 +19,8 @@ public class MainModule extends AtomicModule {
 
     @Override
     public void whenScannedFinished(AtomicEnvironment atomicEnvironment) {
-            i=1;
+        i = 1;
+        System.out.println(AtomicType.of(AnotherModule.class).getAtomicAnnotationIfExist(CustomAnnotation.class).get());
     }
 
     @Override

@@ -6,10 +6,12 @@ import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.core.AtomicEnvironment;
 
 
+@CustomAnnotation
 @Atomic
 public class AnotherModule extends AtomicModule {
     @Atom(concreteType = MainModule.class)
     AtomicModule mainModule;
+
     @Override
     public String getName() {
         return "OtherModule";
@@ -22,7 +24,7 @@ public class AnotherModule extends AtomicModule {
 
     @Override
     public void whenScannedFinished(AtomicEnvironment atomicEnvironment) {
-            assert mainModule!=null;
+        assert mainModule!=null;
     }
 
     @Override

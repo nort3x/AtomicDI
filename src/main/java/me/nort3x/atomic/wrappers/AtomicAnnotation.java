@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class AtomicAnnotation {
 
     final Class<? extends Annotation> correspondingAnnotation;
-    final Set<Class<? extends Annotation>> annotationSet;
 
     final boolean isAtomic;
     final boolean isInterAction;
@@ -22,36 +21,36 @@ public final class AtomicAnnotation {
     final boolean isPredefined;
 
 
+    final private Set<Class<? extends Annotation>> relationalAnnotation;
+
     private AtomicAnnotation(Class<? extends Annotation> correspondingAnnotation) {
 
         this.correspondingAnnotation = correspondingAnnotation;
+        relationalAnnotation = ConcurrentHashMap.newKeySet();
+        addMutualAnnotating(correspondingAnnotation, relationalAnnotation);
 
-        discover(correspondingAnnotation, correspondingAnnotation);
-
-        annotationSet = relations.get(correspondingAnnotation);
 
 //         if any of them is explicitly adding something
-        isAtomic = annotationSet.contains(Atomic.class) || correspondingAnnotation.equals(Atomic.class);
-        isAtom = annotationSet.contains(Atom.class) || correspondingAnnotation.equals(Atom.class);
-        isInterAction = annotationSet.contains(Interaction.class) || correspondingAnnotation.equals(Interaction.class);
-        isExcluded = annotationSet.contains(Exclude.class) || correspondingAnnotation.equals(Exclude.class);
-        isPredefined = annotationSet.contains(Predefined.class) || correspondingAnnotation.equals(Predefined.class);
+        isAtomic = relationalAnnotation.contains(Atomic.class) || correspondingAnnotation.equals(Atomic.class);
+        isAtom = relationalAnnotation.contains(Atom.class) || correspondingAnnotation.equals(Atom.class);
+        isInterAction = relationalAnnotation.contains(Interaction.class) || correspondingAnnotation.equals(Interaction.class);
+        isExcluded = relationalAnnotation.contains(Exclude.class) || correspondingAnnotation.equals(Exclude.class);
+        isPredefined = relationalAnnotation.contains(Predefined.class) || correspondingAnnotation.equals(Predefined.class);
 
 
     }
 
-    public static final ConcurrentHashMap<Class<? extends Annotation>, Set<Class<? extends Annotation>>> relations = new ConcurrentHashMap<>();
-
-    public static void discover(Class<? extends Annotation> annotation, Class<? extends Annotation> caller) {
-
-        for (Annotation an : annotation.getAnnotations()) {
-            if (!relations.computeIfAbsent(caller, x -> ConcurrentHashMap.newKeySet()).contains(an.annotationType())) {
-                relations.get(caller).add(an.annotationType());
-                discover(an.annotationType(), caller);
-            }
-        }
-
+    private void addMutualAnnotating(Class<? extends Annotation> correspondingAnnotation, Set<Class<? extends Annotation>> set) {
+        set.add(correspondingAnnotation);
+        Arrays.stream(correspondingAnnotation.getDeclaredAnnotations()).parallel()
+                .forEach(x -> {
+                            if (!set.contains(x.annotationType())) {
+                                addMutualAnnotating(x.annotationType(), set);
+                            }
+                        }
+                );
     }
+
 
     public static final ConcurrentHashMap<Class<? extends Annotation>, AtomicAnnotation> alreadyLoadedAnnotations = new ConcurrentHashMap<>();
 
@@ -61,7 +60,7 @@ public final class AtomicAnnotation {
 
 
     public Set<Class<? extends Annotation>> getAnnotationSet() {
-        return annotationSet;
+        return relationalAnnotation;
     }
 
 
@@ -171,6 +170,6 @@ public final class AtomicAnnotation {
 
 
     public boolean isAssignableFrom(AtomicAnnotation atomicAnnotation) {
-        return annotationSet.parallelStream().anyMatch(x->x.equals(atomicAnnotation.getCorrespondingAnnotation()));
+        return relationalAnnotation.parallelStream().anyMatch(x -> x.equals(atomicAnnotation.getCorrespondingAnnotation()));
     }
 }

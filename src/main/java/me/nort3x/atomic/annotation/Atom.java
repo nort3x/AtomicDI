@@ -5,7 +5,8 @@ import java.lang.annotation.*;
 
 /**
  * <h2>Atom</h2>
- * Atom force scanner to provide annotated field at runtime
+ * Atom forces scanner to provide annotated field at runtime
+ * any custom annotation that are annotated with Atom will also have the same effect
  * <pre>
  *         <code>
  *

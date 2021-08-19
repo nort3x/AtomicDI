@@ -1,10 +1,19 @@
 package me.nort3x.atomic.core;
 
+import me.nort3x.atomic.core.container.Container;
 import me.nort3x.atomic.utility.CustomCollector;
 import me.nort3x.atomic.wrappers.AtomicAnnotation;
 import me.nort3x.atomic.wrappers.AtomicMethod;
 import me.nort3x.atomic.wrappers.AtomicType;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -59,5 +68,93 @@ public class AtomicEnvironment {
                 });
     }
 
+    public static <T extends Annotation> Optional<T> getAnnotationIfExist(Class<T> annotation, Field f) {
+        Optional<T> ans = Optional.ofNullable(f.getAnnotation(annotation)); // its either annotated itself
+        if (ans.isPresent())
+            return ans;
 
+        // or its annotations
+        return Arrays.stream(f.getDeclaredAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::of)
+                .map(AtomicAnnotation::getAnnotationSet)// unwrap fields annotations
+                .flatMap(Set::stream)
+                .map(x -> x.getAnnotation(annotation))
+                .filter(Objects::nonNull)
+                .findFirst();
+
+    }
+
+    public static <T extends Annotation> Optional<T> getAnnotationIfExist(Class<T> annotation, Method f) {
+        Optional<T> ans = Optional.ofNullable(f.getAnnotation(annotation)); // its either annotated itself
+        if (ans.isPresent())
+            return ans;
+
+        // or its annotations
+        return Arrays.stream(f.getDeclaredAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::of)
+                .map(AtomicAnnotation::getAnnotationSet)// unwrap fields annotations
+                .flatMap(Set::stream)
+                .map(x -> x.getAnnotation(annotation))
+                .filter(Objects::nonNull)
+                .findFirst();
+
+    }
+
+    public static <T extends Annotation> Optional<T> getAnnotationIfExist(Class<T> annotation, Class<?> f) {
+        Optional<T> ans = Optional.ofNullable(f.getAnnotation(annotation)); // its either annotated itself
+        if (ans.isPresent())
+            return ans;
+
+        // or its annotations
+        return Arrays.stream(f.getDeclaredAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::of)
+                .map(AtomicAnnotation::getAnnotationSet)// unwrap fields annotations
+                .flatMap(Set::stream)
+                .map(x -> x.getAnnotation(annotation))
+                .filter(Objects::nonNull)
+                .findFirst();
+
+    }
+
+    public static <T extends Annotation> Optional<T> getAnnotationIfExist(Class<T> annotation, Parameter f) {
+        Optional<T> ans = Optional.ofNullable(f.getAnnotation(annotation)); // its either annotated itself
+        if (ans.isPresent())
+            return ans;
+
+        // or its annotations
+        return Arrays.stream(f.getDeclaredAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::of)
+                .map(AtomicAnnotation::getAnnotationSet)// unwrap fields annotations
+                .flatMap(Set::stream)
+                .map(x -> x.getAnnotation(annotation))
+                .filter(Objects::nonNull)
+                .findFirst();
+
+    }
+
+
+    public static <T extends Annotation> Optional<T> getAnnotationIfExist(Class<T> annotation, Constructor<?> f) {
+        Optional<T> ans = Optional.ofNullable(f.getAnnotation(annotation)); // its either annotated itself
+        if (ans.isPresent())
+            return ans;
+
+        // or its annotations
+        return Arrays.stream(f.getDeclaredAnnotations()).parallel()
+                .map(Annotation::annotationType)
+                .map(AtomicAnnotation::of)
+                .map(AtomicAnnotation::getAnnotationSet)// unwrap fields annotations
+                .flatMap(Set::stream)
+                .map(x -> x.getAnnotation(annotation))
+                .filter(Objects::nonNull)
+                .findFirst();
+
+    }
+
+    <T> T generateFromContainer(Class<T> clazz) {
+        return clazz.cast(Container.makeContainerAround(AtomicType.of(clazz)).getCentral());
+    }
 }
