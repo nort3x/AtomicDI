@@ -17,28 +17,18 @@ public class BasicLogger {
             useANSI = true;
         } else
             useANSI = false;
-
-
-        String banner =
-                "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⢿⣻⣫⢯⣗⣗⣗⣗⣗⡷⡽⣝⡯⣟⢿⢿⣿⣿⣿⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣿⢿⢝⣞⣗⢷⡽⣽⣺⣳⢯⣾⣺⡽⣽⣳⢯⢯⢯⢯⢞⢿⢿⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⢿⣕⡯⣟⣞⡾⣽⢽⣳⣟⣾⣻⣞⣷⣻⣽⣞⣯⢿⡽⣽⢽⢽⢵⣻⣿⣿⣿\n" +
-                        "\t\t⣿⣿⢯⣳⣳⢽⣳⢯⡯⣿⣽⣻⡾⣷⢿⣞⣿⣞⣷⣟⣾⢯⣯⢷⣻⡽⣳⢧⡻⣿⣿\n" +
-                        "\t\t⣿⣏⣗⢷⢽⡽⣞⣯⣿⣳⢟⣷⢿⣻⣽⣟⣾⣻⣾⣻⢾⢿⣞⣯⣷⣻⢽⣳⣝⣝⣿\n" +
-                        "\t\t⣿⣺⣪⢿⢽⡽⣯⢷⡯⢐⠄⠄⣻⣟⣷⢿⣽⣻⡞⠠⡂⠄⢻⣗⣷⢯⣟⣞⡮⣖⣿\n" +
-                        "\t\t⣿⡺⣺⢽⢯⣻⣽⢯⣧⠐⠐⡀⣺⣽⣾⢿⣽⣯⣇⢐⠠⠈⣼⣟⣾⣻⣺⣵⡻⡮⣿\n" +
-                        "\t\t⣿⡺⡽⡽⡯⣷⣻⣻⣽⣾⣲⢾⣽⢷⣟⣿⣳⣯⡿⣶⢶⣽⣻⣾⣳⡯⣷⡳⣯⡳⣻\n" +
-                        "\t\t⣿⡺⣝⡯⡿⡽⣞⣯⣷⢿⣽⢿⣽⢿⣽⢷⣟⣷⢿⣻⡿⣽⢷⣻⢾⣽⣳⢯⣗⢝⣿\n" +
-                        "\t\t⣿⣝⣞⡽⡽⡯⣟⣷⠉⡁⠅⠡⠁⠅⠡⠁⠅⠡⢉⠨⠈⠌⡉⣿⢽⣞⣞⣗⡗⣽⣿\n" +
-                        "\t\t⣿⣿⡼⣺⢽⢯⣟⣞⡷⡶⡾⡶⣷⢾⡶⣷⢾⣶⢶⣶⢷⡶⡾⣽⢽⣺⢞⡞⣼⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣮⢯⣳⡳⡯⡯⣟⣟⣯⢿⡽⣯⣟⣿⣺⡯⣯⡯⣯⢿⢽⢽⡺⡹⣼⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣷⣧⡫⡯⡯⣗⣟⡾⣽⢽⣳⢯⢾⣺⢽⣳⢯⢯⢯⢏⢇⣿⣾⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣾⣽⣕⡳⡫⣗⢟⢾⣝⢯⢯⢻⢪⡫⣽⣼⣾⣿⣿⣿⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣾⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\n" +
-                        "\t\t⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿";
-        System.out.println(banner);
     }
+
+
+    public static String banner =
+            Color.color("      .o.           .                                o8o            oooooooooo.   ooooo \n" +
+                    "     .888.        .o8                                `\"'            `888'   `Y8b  `888' \n" +
+                    "    .8\"888.     .o888oo  .ooooo.  ooo. .oo.  .oo.   oooo   .ooooo.   888      888  888  \n" +
+                    "   .8' `888.      888   d88' `88b `888P\"Y88bP\"Y88b  `888  d88' `\"Y8  888      888  888  \n" +
+                    "  .88ooo8888.     888   888   888  888   888   888   888  888        888      888  888  \n" +
+                    " .8'     `888.    888 . 888   888  888   888   888   888  888   .o8  888     d88'  888  \n" +
+                    "o88o     o8888o   \"888\" `Y8bod8P' o888o o888o o888o o888o `Y8bod8P' o888bood8P'   o888o \n", Color.ANSI_CYAN) + "\n\n" + Color.color(Quotes.getOne(), Color.ANSI_YELLOW) + "\n";
+
 
     final ExecutorService printThread = Executors.newSingleThreadExecutor();
     final private PrintStream ps;
@@ -47,6 +37,13 @@ public class BasicLogger {
     public BasicLogger(OutputStream outputStream, Priority priority) {
         ps = new PrintStream(outputStream);
         this.priority = priority;
+        System.out.println(banner);
+
+        // dont hold strings
+        Quotes.quotes = null;
+        banner = null;
+        System.gc();
+
     }
 
     private void print(String prefix, String s, Priority priority) {

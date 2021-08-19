@@ -20,6 +20,18 @@ public enum Color {
     }
 
     public static String color(String s, Color c) {
+        StringBuilder sb = new StringBuilder();
+        String[] arr = s.split("\n");
+        for (int i = 0; i < arr.length; i++) {
+            sb.append(colorLine(arr[i], c))
+                    .append(i == arr.length - 1 ? "" : "\n");
+//            if(arr[i].equals(""))
+//                sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    static String colorLine(String s, Color c) {
         if (c.equals(Color.ANSI_RESET))
             return s;
         return c.colorValue + s + Color.ANSI_RESET.colorValue;
