@@ -39,8 +39,17 @@ public class Container {
         // create all
         makeAndAddInstance(closedSetOfTypes);
         closedSetOfTypes.parallelStream().forEach(type -> Configurator.configAndGet(type.type, instances, this));
-
     }
+
+
+//    private static Set<Object> alreadyConfiguredObject =Collections.newSetFromMap(Collections.synchronizedMap(new WeakHashMap<>()));
+//
+//    private static void configureInstance(Object o){
+//        if(!alreadyConfiguredObject.contains(o)){
+//
+//        }
+//    }
+
 
     private void makeAndAddInstance(Set<AtomFieldSchematic> set) {
         set.stream() // for types

@@ -13,7 +13,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 group 'me.nort3x'
-version '2.0.0'
+version '2.0.1'
 
 
 
@@ -23,7 +23,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.3.1'
-
 
 }
 

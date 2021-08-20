@@ -2,6 +2,10 @@ package me.nort3x.atomic.logger;
 
 public class Quotes {
     static String[] quotes = {
+            "“What gets measured, gets accomplished.”\n " +
+                    "(Dan Peña)",
+            "“If you left it to engineers, no car would ever come off the assembly line.”\n " +
+                    "(Dan Peña)",
             "“Computers are useless.  They can only give you answers.”\n " +
                     "(Pablo Picasso)",
 

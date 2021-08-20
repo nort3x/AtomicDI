@@ -1,9 +1,6 @@
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static me.nort3x.atomic.utility.Utils.invert;
@@ -37,10 +34,42 @@ public class UtilityTest {
 
     }
 
-    @Test
-    void shouldNotStackOverFlow() {
+    static class FatObj {
+        byte[] data = new byte[1024];
+    }
 
-        System.out.println(Arrays.toString("123;4".split(";")));
+    private static Set<Object> alreadyCreatedObject = Collections.newSetFromMap(Collections.synchronizedMap(new WeakHashMap<Object, Boolean>()));
+
+    @Test
+    void weakHashMapTest() {
+
+        System.gc();
+        System.runFinalization();
+        System.out.println("MemoryBefore initialization: " + Runtime.getRuntime().freeMemory() / 1000000);
+
+        FatObj aFatObj = new FatObj(); // 300 mb
+        alreadyCreatedObject.add(aFatObj);
+        System.out.println("MemoryAfter initialization: " + Runtime.getRuntime().freeMemory() / 1000000);
+        System.out.println(alreadyCreatedObject.size());
+
+        System.gc();
+        System.runFinalization();
+        System.out.println("MemoryAfter CallingGC(kinda) and hard-ref: " + Runtime.getRuntime().freeMemory() / 1000000);
+        System.out.println(alreadyCreatedObject.size());
+
+        aFatObj = null; // no strong ref anyMore
+        System.gc();
+        System.runFinalization();
+        System.out.println("MemoryAfter CallingGC(kinda) and hard-ref: " + Runtime.getRuntime().freeMemory() / 1000000);
+        System.out.println(alreadyCreatedObject.size());
+    }
+
+
+    @Test
+    void shouldEncodeToBase64() {
+
 
     }
+
+
 }

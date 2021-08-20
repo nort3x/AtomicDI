@@ -24,8 +24,13 @@ public class AtomicDI {
 
     static Set<Class<?>> scannablePaths = ConcurrentHashMap.newKeySet();
 
+    public static void addAsScannablePath(Class<?> topClass) {
+        scannablePaths.add(topClass);
+    }
+
+
     static {
-        scannablePaths.add(AtomicDI.class);
+        addAsScannablePath(AtomicDI.class);
     }
 
     final Resolver rs;
