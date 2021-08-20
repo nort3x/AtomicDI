@@ -103,7 +103,7 @@ allprojects {
 Step 2. Add the dependency
 ```gradle
 dependencies {
-    implementation 'com.github.nort3x:AtomicDI:2.0.0'
+    implementation 'com.github.nort3x:AtomicDI:2.0.5'
 }
 ```
 
@@ -123,7 +123,7 @@ Step 2. Add the dependency
 <dependency>
     <groupId>com.github.nort3x</groupId>
     <artifactId>AtomicDI</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.5</version>
 </dependency>
 ```
 
