@@ -154,9 +154,6 @@ public class AtomicEnvironment {
 
     }
 
-    <T> T generateFromContainer(Class<T> clazz) {
-        return clazz.cast(Container.makeContainerAround(AtomicType.of(clazz)).getCentral());
-    }
 
     public Container spawnNewContainer(AtomicType atomicType) {
         return Container.makeContainerAround(atomicType);

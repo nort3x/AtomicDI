@@ -13,7 +13,7 @@ public class CoffeeMachineCyclicTest {
     void shouldResolveCycleInCoffeeMachine() {
         AtomicLogger.setVerbosityLevel(Priority.DEBUG);
         AtomicDI.run(ClassOne.class);
-        Java j = (Java) Container.makeContainerAround(AtomicType.of(Java.class)).getCentral();
+        Java j = (Java) Container.makeContainerAround(AtomicType.of(Java.class)).getCentralUnique();
         Assertions.assertTrue(j.hasBeansInCoffeeMachine());
     }
 }

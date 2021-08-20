@@ -64,7 +64,7 @@ public class AtomicDI {
         atomicEnvironment.getAllAtomicTypesDerivedFromAtomicType(AtomicType.of(AtomicModule.class)).parallelStream()
                 .filter(x -> !x.getCorrespondingType().equals(AtomicModule.class))
                 .forEach(module -> {
-                    AtomicModule am = (AtomicModule) Container.makeContainerAround(module).getCentral();
+                    AtomicModule am = (AtomicModule) Container.makeContainerAround(module).getCentralShared();
                     modules.put(module, am);
                     AtomicLogger.getInstance().info("LoadedModule: " + am.getName() + " : " + am.getVersion(), Priority.IMPORTANT, AtomicDI.class);
                 });

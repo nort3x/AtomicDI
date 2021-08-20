@@ -13,6 +13,6 @@ public class PredefinedTest {
         AtomicLogger.setVerbosityLevel(Priority.DEBUG);
         AtomicDI.run(EnumLike.class);
 
-        PrettyPredefined pt = (PrettyPredefined) Container.makeContainerAround(AtomicType.of(PrettyPredefined.class)).getCentral();
+        PrettyPredefined pt = (PrettyPredefined) Container.makeContainerAround(AtomicType.of(PrettyPredefined.class)).getCentralUnique();
     }
 }

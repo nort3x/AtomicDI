@@ -14,7 +14,7 @@ public class Layer2AnnotationTest {
     void shouldShareAndCreateShare() {
         AtomicLogger.setVerbosityLevel(Priority.DEBUG);
         AtomicDI.run(ShareMe.class);
-        Logical lg = (Logical) Container.makeContainerAround(AtomicType.of(Logical.class)).getCentral();
-        Greedy greedy = (Greedy) Container.makeContainerAround(AtomicType.of(Greedy.class)).getCentral();
+        Logical lg = (Logical) Container.makeContainerAround(AtomicType.of(Logical.class)).getCentralUnique();
+        Greedy greedy = (Greedy) Container.makeContainerAround(AtomicType.of(Greedy.class)).getCentralUnique();
     }
 }

@@ -72,20 +72,41 @@ public class Container {
 
     /**
      * @param atomicType referring type
-     * @return instance of asked AtomicType or null if doesnt exist in this Container
+     * @return a unique fresh instance of asked AtomicType or null if doesnt exist in this Container
+     * @see Container#getCentralUnique()
      */
-    public Object get(AtomicType atomicType) {
+    public Object getUnique(AtomicType atomicType) {
         if (!instances.containsKey(atomicType)) {
             AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
         }
         return instances.getOrDefault(atomicType, null);
     }
 
+
     /**
-     * @return instance of central element which is the most dependent element of this Container
+     * @param atomicType referring type
+     * @return if any or create instance of asked AtomicType or null if doesnt exist in this Container
+     * @see Container#getCentralShared()
      */
-    public Object getCentral() {
-        return get(formedAround);
+    public Object getShared(AtomicType atomicType) {
+        if (!instances.containsKey(atomicType)) {
+            AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+        }
+        return sharedCrossEveryOne.computeIfAbsent(atomicType, x -> getUnique(atomicType));
+    }
+
+    /**
+     * @return a unique fresh instance of central element which is the most dependent element of this Container
+     */
+    public Object getCentralUnique() {
+        return getUnique(formedAround);
+    }
+
+    /**
+     * @return if any or create an instance of central element which is the most dependent element of this Container
+     */
+    public Object getCentralShared() {
+        return getShared(formedAround);
     }
 
 

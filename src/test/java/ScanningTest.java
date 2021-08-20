@@ -14,7 +14,7 @@ public class ScanningTest {
         //Assertions.assertEquals(2, a.getGreedyBag().getTypesAnnotations().size());
         Container c = Container.makeContainerAround(AtomicType.of(ClassOne.class));
 
-        c.get(AtomicType.of(ClassOne.class));
+        c.getUnique(AtomicType.of(ClassOne.class));
 
         Thread.sleep(1000);
     }
