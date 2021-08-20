@@ -120,12 +120,12 @@ public class Container {
 
 
     public static Container makeContainerAroundShared(AtomicType atomicType) {
-        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.PER_CONTAINER)), atomicType);
+        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.GLOBAL)), atomicType);
     }
 
 
     public static Container makeContainerAroundUnique(AtomicType atomicType) {
-        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.GLOBAL)), atomicType);
+        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.PER_CONTAINER)), atomicType);
     }
 
     /**
