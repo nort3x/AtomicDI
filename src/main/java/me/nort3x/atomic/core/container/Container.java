@@ -72,20 +72,41 @@ public class Container {
 
     /**
      * @param atomicType referring type
-     * @return instance of asked AtomicType or null if doesnt exist in this Container
+     * @return a unique fresh instance of asked AtomicType or null if doesnt exist in this Container
+     * @see Container#getCentralUnique()
      */
-    public Object get(AtomicType atomicType) {
+    public Object getUnique(AtomicType atomicType) {
         if (!instances.containsKey(atomicType)) {
             AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
         }
         return instances.getOrDefault(atomicType, null);
     }
 
+
     /**
-     * @return instance of central element which is the most dependent element of this Container
+     * @param atomicType referring type
+     * @return if any or create instance of asked AtomicType or null if doesnt exist in this Container
+     * @see Container#getCentralShared()
      */
-    public Object getCentral() {
-        return get(formedAround);
+    public Object getShared(AtomicType atomicType) {
+        if (!instances.containsKey(atomicType)) {
+            AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+        }
+        return sharedCrossEveryOne.computeIfAbsent(atomicType, x -> getUnique(atomicType));
+    }
+
+    /**
+     * @return a unique fresh instance of central element which is the most dependent element of this Container
+     */
+    public Object getCentralUnique() {
+        return getUnique(formedAround);
+    }
+
+    /**
+     * @return if any or create an instance of central element which is the most dependent element of this Container
+     */
+    public Object getCentralShared() {
+        return getShared(formedAround);
     }
 
 
@@ -98,8 +119,13 @@ public class Container {
     }
 
 
-    public static Container makeContainerAround(AtomicType atomicType) {
-        return new Container(alreadyScanned.computeIfAbsent(atomicType, Container::makeContainerRelationSet), atomicType);
+    public static Container makeContainerAroundShared(AtomicType atomicType) {
+        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.PER_CONTAINER)), atomicType);
+    }
+
+
+    public static Container makeContainerAroundUnique(AtomicType atomicType) {
+        return new Container(alreadyScanned.computeIfAbsent(atomicType, type -> Container.makeContainerRelationSet(type, Atom.Scope.GLOBAL)), atomicType);
     }
 
     /**
@@ -107,9 +133,9 @@ public class Container {
      * @return a set of every atomic element root will need for functioning
      * Authored, by Kemikals
      */
-    private static Set<AtomFieldSchematic> makeContainerRelationSet(AtomicType type) {
+    private static Set<AtomFieldSchematic> makeContainerRelationSet(AtomicType type, Atom.Scope centerScope) {
         Set<AtomFieldSchematic> containerRelationSet = ConcurrentHashMap.newKeySet(); // make relation set
-        containerRelationSet.add(new AtomFieldSchematic(Atom.Scope.PER_CONTAINER, type));                                      // add 'root' type to it
+        containerRelationSet.add(new AtomFieldSchematic(centerScope, type));                                      // add 'root' type to it
         addMutualDependenciesRecursive(type, containerRelationSet);          // add everything else respect to root recursively (it modifies set)
         return containerRelationSet;                                         // return respectively
     }

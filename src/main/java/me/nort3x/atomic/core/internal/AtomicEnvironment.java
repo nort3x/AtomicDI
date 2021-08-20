@@ -1,6 +1,5 @@
 package me.nort3x.atomic.core.internal;
 
-import me.nort3x.atomic.core.container.Container;
 import me.nort3x.atomic.utility.CustomCollector;
 import me.nort3x.atomic.wrappers.AtomicAnnotation;
 import me.nort3x.atomic.wrappers.AtomicMethod;
@@ -152,18 +151,6 @@ public class AtomicEnvironment {
                 .filter(Objects::nonNull)
                 .findFirst();
 
-    }
-
-    <T> T generateFromContainer(Class<T> clazz) {
-        return clazz.cast(Container.makeContainerAround(AtomicType.of(clazz)).getCentral());
-    }
-
-    public Container spawnNewContainer(AtomicType atomicType) {
-        return Container.makeContainerAround(atomicType);
-    }
-
-    public Container spawnNewContainer(Class<?> atomicType) {
-        return Container.makeContainerAround(AtomicType.of(atomicType));
     }
 
 }
