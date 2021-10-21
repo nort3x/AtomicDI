@@ -21,16 +21,16 @@ public class AnotherModule extends AtomicModule {
     }
 
     @Override
-    public void onModuleLoaded(AtomicEnvironment atomicEnvironment, String[] args) {
+    public void onLoad(AtomicEnvironment atomicEnvironment, String[] args) {
         assert mainModule != null;
     }
 
     @Override
-    public void onModuleStart(AtomicEnvironment atomicEnvironment) {
+    public void onStart(AtomicEnvironment atomicEnvironment) {
         System.out.println(((MainModule) mainModule).mainModuleIsOneAfterScanned());
     }
 
     @Override
-    public void onModuleStop(AtomicEnvironment atomicEnvironment) {
+    public void onStop(AtomicEnvironment atomicEnvironment) {
     }
 }

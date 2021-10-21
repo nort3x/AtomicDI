@@ -13,7 +13,7 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 group 'me.nort3x'
-version '2.0.1'
+version '2.1.1'
 
 
 

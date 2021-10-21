@@ -2,23 +2,22 @@ package me.nort3x.atomic;
 
 import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.core.container.Container;
-import me.nort3x.atomic.core.integrator.PredefinedLoader;
 import me.nort3x.atomic.core.internal.AtomicEnvironment;
 import me.nort3x.atomic.core.internal.Resolver;
 import me.nort3x.atomic.logger.AtomicLogger;
 import me.nort3x.atomic.logger.Priority;
 import me.nort3x.atomic.wrappers.AtomicType;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.*;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static me.nort3x.atomic.core.integrator.PredefinedLoader.addDefinitionFile;
+
 
 public class AtomicDI {
 
@@ -42,14 +41,14 @@ public class AtomicDI {
         rs = new Resolver();
         atomicEnvironment = new AtomicEnvironment();
         try {
-            URL url = PredefinedLoader.class.getClassLoader().getResource("AtomicDI.ini");
-            if (url != null) {
-                File resourceFile = new File(url.toURI());
-                addDefinitionFile(resourceFile);
+            InputStream innerInps = getClass().getClassLoader().getResourceAsStream("atomic.properties");
+            if (innerInps != null) {
+                addDefinitionFile(innerInps);
             }
-            File pathFile = new File("AtomicDI.ini");
-            addDefinitionFile(pathFile);
-        } catch (URISyntaxException | IOException e) {
+            File pathFile = new File("atomic.properties");
+            if (pathFile.exists() && pathFile.canRead())
+                addDefinitionFile(new FileInputStream(pathFile));
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -69,21 +68,35 @@ public class AtomicDI {
                     AtomicLogger.getInstance().info("LoadedModule: " + am.getName() + " : " + am.getVersion(), Priority.IMPORTANT, AtomicDI.class);
                 });
         modules.values().parallelStream().forEach(x -> {
-            x.onModuleLoaded(atomicEnvironment, args);
+            x.onLoad(atomicEnvironment, args);
             AtomicLogger.getInstance().info("Invoked scanFinished of: " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
         });
 
         modules.values().parallelStream().forEach(x -> {
             tp.submit(() -> {
                 AtomicLogger.getInstance().info("startingModule : " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
-                x.onModuleStart(atomicEnvironment);
+                x.onStart(atomicEnvironment);
                 AtomicLogger.getInstance().info("ModuleReturned : " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
-                x.onModuleStop(atomicEnvironment);
             });
         });
     }
 
+
+    public void stopAllModules(){
+        modules.values().forEach(this::stopModule);
+    }
+    public void stopModule(AtomicModule module){
+        AtomicLogger.getInstance().info("Stopping Module : " + module.getName() + " : " + module.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+        module.onStop(atomicEnvironment);
+        AtomicLogger.getInstance().info("Module Stopped : " + module.getName() + " : " + module.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+    }
+    public Map<AtomicType, AtomicModule> getModules(){
+        return modules;
+    }
+
+
     public static void run(Class<?> entryPoint, String... args) {
         instance.resolve(entryPoint, args);
     }
+
 }

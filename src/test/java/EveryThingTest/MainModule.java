@@ -17,17 +17,17 @@ public class MainModule extends AtomicModule {
     }
 
     @Override
-    public void onModuleLoaded(AtomicEnvironment atomicEnvironment, String[] args) {
+    public void onLoad(AtomicEnvironment atomicEnvironment, String[] args) {
         i = 1;
     }
 
     @Override
-    public void onModuleStart(AtomicEnvironment atomicEnvironment) {
+    public void onStart(AtomicEnvironment atomicEnvironment) {
         k = 1;
     }
 
     @Override
-    public void onModuleStop(AtomicEnvironment atomicEnvironment) {
+    public void onStop(AtomicEnvironment atomicEnvironment) {
 
     }
 
