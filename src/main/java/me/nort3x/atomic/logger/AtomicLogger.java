@@ -94,7 +94,7 @@ public class AtomicLogger implements ILoggerFactory {
         if (silence)
             return new LoggerAdaptor(); // total nop
         if (useEmbeddedLogger)
-            new BasicLogger(new PrintStream(outputStream), p, name);
+            return new BasicLogger(new PrintStream(outputStream), p, name);
 
         try {
             if (ClassLoader.getSystemResources("org/slf4j/impl/StaticLoggerBinder.class").hasMoreElements())
