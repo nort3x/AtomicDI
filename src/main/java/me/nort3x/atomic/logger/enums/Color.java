@@ -1,4 +1,4 @@
-package me.nort3x.atomic.logger;
+package me.nort3x.atomic.logger.enums;
 
 public enum Color {
     ANSI_RESET("\u001B[0m"),
@@ -37,15 +37,15 @@ public enum Color {
         return c.colorValue + s + Color.ANSI_RESET.colorValue;
     }
 
-    static class Rainbow {
+    public static class Rainbow {
         StringBuilder sb = new StringBuilder();
 
-        Rainbow of(String s, Color c) {
+        public Rainbow of(String s, Color c) {
             sb.append(Color.color(s, c));
             return this;
         }
 
-        Rainbow append(String s) {
+        public Rainbow append(String s) {
             sb.append(s);
             return this;
         }

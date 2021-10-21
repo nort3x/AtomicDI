@@ -1,4 +1,4 @@
-package me.nort3x.atomic.logger;
+package me.nort3x.atomic.logger.enums;
 
 public enum Priority {
     DEBUG(0),
@@ -6,7 +6,7 @@ public enum Priority {
     VERBOSE(2),
     IMPORTANT(3),
     VERY_IMPORTANT(4);
-    final int comparable;
+    public final int comparable;
 
     Priority(int comparable) {
         this.comparable = comparable;

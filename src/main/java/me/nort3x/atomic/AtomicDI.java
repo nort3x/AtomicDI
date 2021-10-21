@@ -5,11 +5,11 @@ import me.nort3x.atomic.core.container.Container;
 import me.nort3x.atomic.core.internal.AtomicEnvironment;
 import me.nort3x.atomic.core.internal.Resolver;
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.wrappers.AtomicType;
+import org.slf4j.Logger;
 
 import java.io.*;
-import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +21,8 @@ import static me.nort3x.atomic.core.integrator.PredefinedLoader.addDefinitionFil
 
 public class AtomicDI {
 
+
+    Logger logger;
     static Set<Class<?>> scannablePaths = ConcurrentHashMap.newKeySet();
 
     public static void addAsScannablePath(Class<?> topClass) {
@@ -37,6 +39,7 @@ public class AtomicDI {
     private static final AtomicDI instance = new AtomicDI();
 
     public AtomicDI() {
+        logger = AtomicLogger.getInstance().getLogger(getClass(),Priority.IMPORTANT);
         // assemble
         rs = new Resolver();
         atomicEnvironment = new AtomicEnvironment();
@@ -65,18 +68,18 @@ public class AtomicDI {
                 .forEach(module -> {
                     AtomicModule am = (AtomicModule) Container.makeContainerAroundShared(module).getCentralShared();
                     modules.put(module, am);
-                    AtomicLogger.getInstance().info("LoadedModule: " + am.getName() + " : " + am.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+                    logger.info("LoadedModule: " + am.getName() + " : " + am.getVersion());
                 });
         modules.values().parallelStream().forEach(x -> {
             x.onLoad(atomicEnvironment, args);
-            AtomicLogger.getInstance().info("Invoked scanFinished of: " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+            logger.info("Invoked scanFinished of: " + x.getName() + " : " + x.getVersion());
         });
 
         modules.values().parallelStream().forEach(x -> {
             tp.submit(() -> {
-                AtomicLogger.getInstance().info("startingModule : " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+                logger.info("startingModule : " + x.getName() + " : " + x.getVersion());
                 x.onStart(atomicEnvironment);
-                AtomicLogger.getInstance().info("ModuleReturned : " + x.getName() + " : " + x.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+                logger.info("ModuleReturned : " + x.getName() + " : " + x.getVersion());
             });
         });
     }
@@ -86,9 +89,9 @@ public class AtomicDI {
         modules.values().forEach(this::stopModule);
     }
     public void stopModule(AtomicModule module){
-        AtomicLogger.getInstance().info("Stopping Module : " + module.getName() + " : " + module.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+        logger.info("Stopping Module : " + module.getName() + " : " + module.getVersion());
         module.onStop(atomicEnvironment);
-        AtomicLogger.getInstance().info("Module Stopped : " + module.getName() + " : " + module.getVersion(), Priority.IMPORTANT, AtomicDI.class);
+        logger.info("Module Stopped : " + module.getName() + " : " + module.getVersion());
     }
     public Map<AtomicType, AtomicModule> getModules(){
         return modules;

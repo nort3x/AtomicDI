@@ -3,10 +3,11 @@ package me.nort3x.atomic.core.container;
 import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.core.integrator.PredefinedLoader;
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.reactor.LinearReactor;
 import me.nort3x.atomic.reactor.ParallelReactor;
 import me.nort3x.atomic.wrappers.AtomicType;
+import org.slf4j.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -55,13 +56,14 @@ public class Configurator {
 
         atomicType.getPostConstructor().ifPresent(postConfig -> postConfigurations.addReaction(tupleOfInstanceAndContainerMap -> {
             postConfig.invoke(tupleOfInstanceAndContainerMap.obj, exp -> {
-                AtomicLogger.getInstance().warning("PostConfiguration: " + atomicType.getCorrespondingType().getName() + "." + postConfig.getCorrespondingMethod().getName()
-                        + " Thrown Exception: " + AtomicLogger.exceptionToString(exp), Priority.IMPORTANT, Configurator.class);
+                l.warn("PostConfiguration: " + atomicType.getCorrespondingType().getName() + "." + postConfig.getCorrespondingMethod().getName()
+                        + " Thrown Exception: " + AtomicLogger.exceptionToString(exp));
             });
         }));
 
     }
 
+    private final Logger l = AtomicLogger.getInstance().getLogger(Configurator.class,Priority.IMPORTANT);
     private static final Map<AtomicType, Configurator> configurators = new ConcurrentHashMap<>();
 
 

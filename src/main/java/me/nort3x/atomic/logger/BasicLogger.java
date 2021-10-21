@@ -1,12 +1,22 @@
 package me.nort3x.atomic.logger;
 
+import me.nort3x.atomic.logger.enums.Color;
+import me.nort3x.atomic.logger.enums.Priority;
+import me.nort3x.atomic.logger.res.Quotes;
+import me.nort3x.atomic.logger.res.Resources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
-public class BasicLogger {
+public class BasicLogger extends LoggerAdaptor{
+
     static final boolean useANSI;
 
     static {
@@ -14,36 +24,30 @@ public class BasicLogger {
             Resources.Error_Prefix = Color.color(Resources.Error_Prefix, Color.ANSI_RED);
             Resources.Warning_Prefix = Color.color(Resources.Warning_Prefix, Color.ANSI_YELLOW);
             Resources.Log_Prefix = Color.color(Resources.Log_Prefix, Color.ANSI_GREEN);
+            Resources.Debug_Prefix = Color.color(Resources.Debug_Prefix, Color.ANSI_YELLOW);
+            Resources.Trace_Prefix = Color.color(Resources.Debug_Prefix, Color.ANSI_CYAN);
             useANSI = true;
         } else
             useANSI = false;
     }
 
 
-    public static String banner =
-            Color.color("      .o.           .                                o8o            oooooooooo.   ooooo \n" +
-                    "     .888.        .o8                                `\"'            `888'   `Y8b  `888' \n" +
-                    "    .8\"888.     .o888oo  .ooooo.  ooo. .oo.  .oo.   oooo   .ooooo.   888      888  888  \n" +
-                    "   .8' `888.      888   d88' `88b `888P\"Y88bP\"Y88b  `888  d88' `\"Y8  888      888  888  \n" +
-                    "  .88ooo8888.     888   888   888  888   888   888   888  888        888      888  888  \n" +
-                    " .8'     `888.    888 . 888   888  888   888   888   888  888   .o8  888     d88'  888  \n" +
-                    "o88o     o8888o   \"888\" `Y8bod8P' o888o o888o o888o o888o `Y8bod8P' o888bood8P'   o888o \n", Color.ANSI_CYAN) + "\n\n" + Color.color(Quotes.getOne(), Color.ANSI_YELLOW) + "\n";
 
+    PrintStream ps;
 
-    final ExecutorService printThread = Executors.newSingleThreadExecutor();
-    final private PrintStream ps;
-    final Priority priority;
+    static final ExecutorService printThread = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r);
+        t.setDaemon(true);
+        t.setName("Printer Thread");
+        return t;
+    });
 
-    public BasicLogger(OutputStream outputStream, Priority priority) {
-        ps = new PrintStream(outputStream);
+    Priority priority;
+    String name;
+    protected BasicLogger(PrintStream ps, Priority priority, String name) {
+        this.ps = ps;
         this.priority = priority;
-        System.out.println(banner);
-
-        // dont hold strings
-        Quotes.quotes = null;
-        banner = null;
-        System.gc();
-
+        this.name = name;
     }
 
     private void print(String prefix, String s, Priority priority) {
@@ -58,35 +62,64 @@ public class BasicLogger {
         });
     }
 
-    public void info(String s, Priority priority) {
-        print(Resources.Log_Prefix, s, priority);
-    }
 
-    public void info(String s, Priority priority, Class<?> c) {
-        print(Resources.Log_Prefix, forgeName(c) + s, priority);
-    }
-
-    public void warning(String s, Priority priority) {
-        print(Resources.Warning_Prefix, s, priority);
-    }
-
-    public void warning(String s, Priority priority, Class<?> c) {
-        print(Resources.Warning_Prefix, forgeName(c) + s, priority);
-    }
-
-    public void fatal(String s, Priority priority) {
-        print(Resources.Error_Prefix, s, priority);
-    }
-
-    public void fatal(String s, Priority priority, Class<?> c) {
-        print(Resources.Error_Prefix, forgeName(c) + s, priority);
-    }
-
-    private String forgeName(Class<?> c) {
+    private String forgeName() {
         String s = "[" +
-                (c.isAnonymousClass() ? "AnonymousType - " + c.getName() : c.getSimpleName())
+                name
                 + "] ";
 
         return useANSI ? Color.color(s, Color.ANSI_BLUE) : s;
+    }
+
+    @Override
+    public boolean isTraceEnabled() {
+        return true;
+    }
+
+    @Override
+    public void trace(String msg) {
+        print(Resources.Trace_Prefix, forgeName() + msg, priority);
+
+    }
+
+    @Override
+    public boolean isDebugEnabled() {
+        return true;
+    }
+
+    @Override
+    public void debug(String msg) {
+        print(Resources.Debug_Prefix, forgeName() + msg, priority);
+    }
+
+    @Override
+    public boolean isInfoEnabled() {
+        return true;
+    }
+
+    @Override
+    public void info(String msg) {
+        print(Resources.Log_Prefix, forgeName() + msg, priority);
+    }
+
+    @Override
+    public boolean isWarnEnabled() {
+        return true;
+    }
+
+    @Override
+    public void warn(String msg) {
+        print(Resources.Warning_Prefix, forgeName() + msg, priority);
+    }
+
+    @Override
+    public boolean isErrorEnabled() {
+        return true;
+    }
+
+    @Override
+    public void error(String msg) {
+        print(Resources.Error_Prefix, forgeName() + msg, priority);
+
     }
 }

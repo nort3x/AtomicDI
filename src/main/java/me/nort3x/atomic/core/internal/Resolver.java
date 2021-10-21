@@ -3,9 +3,10 @@ package me.nort3x.atomic.core.internal;
 import me.nort3x.atomic.annotation.Atomic;
 import me.nort3x.atomic.annotation.Exclude;
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.wrappers.AtomicType;
 import org.reflections8.Reflections;
+import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 public class Resolver {
 
     final AtomicLogger logger = AtomicLogger.getInstance();
+    private Logger lImp = AtomicLogger.getInstance().getLogger(Resolver.class, Priority.IMPORTANT), lDeb = AtomicLogger.getInstance().getLogger(Resolver.class, Priority.DEBUG);
 
     public Resolver() {
 
@@ -24,10 +26,10 @@ public class Resolver {
         // a filter should not be like this but for sake of log it is
         Collection<Class<?>> grabbedTypes = new Reflections(point) // scan for all Types and SubTypes
                 .getTypesAnnotatedWith(Atomic.class, true).stream() // which are atomic
-                .peek(x -> logger.info("Discovered Atomic Type: " + x.getName(), Priority.DEBUG, Resolver.class))
+                .peek(x -> lDeb.info("Discovered Atomic Type: " + x.getName()))
                 .filter(aClass -> {
                     if (aClass.isAnnotationPresent(Exclude.class)) {
-                        logger.info("Excluded Atomic Type: " + aClass.getName(), Priority.DEBUG, Resolver.class);
+                        lDeb.info("Excluded Atomic Type: " + aClass.getName());
                         return false;
                     } else
                         return true;
@@ -39,7 +41,7 @@ public class Resolver {
         grabbedTypes.parallelStream().forEach(type -> {
             AtomicType at = AtomicType.of(type);
             if (!at.isAtomic())
-                logger.warning("NonAtomicTypeCalled to be loaded, you are facing a bug, please report this", Priority.VERY_IMPORTANT, Resolver.class);
+                lImp.warn("NonAtomicTypeCalled to be loaded, you are facing a bug, please report this");
         });
 
     }

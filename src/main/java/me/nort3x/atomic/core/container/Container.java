@@ -3,9 +3,10 @@ package me.nort3x.atomic.core.container;
 import me.nort3x.atomic.annotation.Atom;
 import me.nort3x.atomic.basic.AtomicModule;
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.wrappers.AtomicField;
 import me.nort3x.atomic.wrappers.AtomicType;
+import org.slf4j.Logger;
 
 import java.util.Objects;
 import java.util.Set;
@@ -56,7 +57,7 @@ public class Container {
                 .filter(atomicType -> {
                     if (atomicType.type.getNoArgsConstructor() != null) // if no argsConstructor exist
                         return true;
-                    AtomicLogger.getInstance().fatal("AtomicType: " + atomicType.type.getCorrespondingType().getName() + "has NoArgsConstructor", Priority.VERY_IMPORTANT, Container.class);
+                    l.error("AtomicType: " + atomicType.type.getCorrespondingType().getName() + "has NoArgsConstructor", Priority.VERY_IMPORTANT, Container.class);
                     return false;
                 })
                 .forEach(atomicType -> {
@@ -77,7 +78,7 @@ public class Container {
      */
     public Object getUnique(AtomicType atomicType) {
         if (!instances.containsKey(atomicType)) {
-            AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+            l.error("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName());
         }
         return instances.getOrDefault(atomicType, null);
     }
@@ -90,7 +91,7 @@ public class Container {
      */
     public Object getShared(AtomicType atomicType) {
         if (!instances.containsKey(atomicType)) {
-            AtomicLogger.getInstance().fatal("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+            l.error("Requesting AtomicType: " + atomicType.getCorrespondingType().getName() + " which is not present around: " + formedAround.getCorrespondingType().getName());
         }
         return sharedCrossEveryOne.computeIfAbsent(atomicType, x -> getUnique(atomicType));
     }
@@ -113,7 +114,7 @@ public class Container {
     private Object createInstance(AtomicType type) {
         return type.getNoArgsConstructor().getInstance()
                 .orElseGet(() -> {
-                    AtomicLogger.getInstance().fatal("AtomicCreation Failed for AtomicType: " + type.getCorrespondingType().getName() + " in Container around: " + formedAround.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+                    l.error("AtomicCreation Failed for AtomicType: " + type.getCorrespondingType().getName() + " in Container around: " + formedAround.getCorrespondingType().getName());
                     return null;
                 });
     }
@@ -185,7 +186,7 @@ public class Container {
                 .peek(field -> {
                     if (field.type.isSubOf(AtomicType.of(AtomicModule.class))) { // overriding scope in case of module
                         if (!field.atomScope.equals(Atom.Scope.GLOBAL))
-                            AtomicLogger.getInstance().warning("Atom Field of Type AtomicModule can Only be Scoped Global, overriding scope of Field: " + field.type.getCorrespondingType().getName(), Priority.VERY_IMPORTANT, Container.class);
+                            l.warn("Atom Field of Type AtomicModule can Only be Scoped Global, overriding scope of Field: " + field.type.getCorrespondingType().getName());
                         field.atomScope = Atom.Scope.GLOBAL;
                     }
                 })
@@ -197,5 +198,6 @@ public class Container {
                 });
     }
 
+    private static Logger l = AtomicLogger.getInstance().getLogger(Container.class, Priority.VERY_IMPORTANT);
 
 }

@@ -2,16 +2,12 @@ package me.nort3x.atomic.core.integrator;
 
 import me.nort3x.atomic.annotation.Predefined;
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.wrappers.AtomicField;
+import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,14 +25,16 @@ public class PredefinedLoader {
         });
     }
 
+    private static Logger l = AtomicLogger.getInstance().getLogger(PredefinedLoader.class,Priority.IMPORTANT);
+
     public static void setPredefinedValue(AtomicField f, Object obj) {
         if (!f.isPredefined()) {
-            AtomicLogger.getInstance().warning("Predefined field Injector is called for AtomicField: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + "but its not annotated with Predefined", Priority.IMPORTANT, PredefinedLoader.class);
+            l.warn("Predefined field Injector is called for AtomicField: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + "but its not annotated with Predefined");
         }
         String key = f.getCorrespondingField().getAnnotation(Predefined.class).value();
         Value value = values.getOrDefault(key,null);
         if (value == null) {
-            AtomicLogger.getInstance().warning("Predefined key-value: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + " is [not Found] among scanned entry paths", Priority.IMPORTANT, PredefinedLoader.class);
+            l.warn("Predefined key-value: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + " is [not Found] among scanned entry paths");
             return;
         }
         f.setField(obj,value.readFor(f.getType()));

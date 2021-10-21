@@ -1,7 +1,7 @@
 package me.nort3x.atomic.wrappers;
 
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 import me.nort3x.atomic.utility.CustomCollector;
 
 import java.lang.reflect.Field;
@@ -50,8 +50,8 @@ public final class AtomicField {
         try {
             correspondingField.set(instance, value);
         } catch (IllegalAccessException e) {
-            AtomicLogger.getInstance().fatal("Setting Field:" + correspondingField.getDeclaringClass().getName() + "." + correspondingField.getName() + " thrown Exception: " +
-                    AtomicLogger.exceptionToString(e), Priority.VERY_IMPORTANT, AtomicField.class);
+            AtomicLogger.getInstance().getLogger(AtomicField.class,Priority.VERY_IMPORTANT).error("Setting Field:" + correspondingField.getDeclaringClass().getName() + "." + correspondingField.getName() + " thrown Exception: " +
+                    AtomicLogger.exceptionToString(e));
         }
     }
 

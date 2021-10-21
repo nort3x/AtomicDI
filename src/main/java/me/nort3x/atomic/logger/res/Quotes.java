@@ -1,7 +1,7 @@
-package me.nort3x.atomic.logger;
+package me.nort3x.atomic.logger.res;
 
 public class Quotes {
-    static String[] quotes = {
+    public static String[] quotes = {
             "“What gets measured, gets accomplished.”\n " +
                     "(Dan Peña)",
             "“If you left it to engineers, no car would ever come off the assembly line.”\n " +

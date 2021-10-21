@@ -1,7 +1,7 @@
 package me.nort3x.atomic.core.integrator;
 
 import me.nort3x.atomic.logger.AtomicLogger;
-import me.nort3x.atomic.logger.Priority;
+import me.nort3x.atomic.logger.enums.Priority;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,9 +43,9 @@ public class Value {
                 return handlers.get(type).apply(valueAsString);
             }
         } catch (Exception e) {
-            AtomicLogger.getInstance().warning("Resolving Predefined '" + key + "' : '" + valueAsString + "' to " + type.getName() + " resulted an Exception: " + AtomicLogger.exceptionToString(e), Priority.VERY_IMPORTANT, Value.class);
+            AtomicLogger.getInstance().getLogger(Value.class,Priority.VERY_IMPORTANT).error("Resolving Predefined '" + key + "' : '" + valueAsString + "' to " + type.getName() + " resulted an Exception: " + AtomicLogger.exceptionToString(e));
         }
-        AtomicLogger.getInstance().warning("requested Predefined '" + key + "' : '" + valueAsString + "' could not be resolved to given type: " + type.getName() + " because its not a supported type, caller will receive null", Priority.VERY_IMPORTANT, Value.class);
+        AtomicLogger.getInstance().getLogger(Value.class,Priority.VERY_IMPORTANT).warn("requested Predefined '" + key + "' : '" + valueAsString + "' could not be resolved to given type: " + type.getName() + " because its not a supported type, caller will receive null");
         return null;
     }
 
