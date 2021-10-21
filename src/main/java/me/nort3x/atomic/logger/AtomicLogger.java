@@ -98,7 +98,7 @@ public class AtomicLogger implements ILoggerFactory {
 
         try {
             if (ClassLoader.getSystemResources("org/slf4j/impl/StaticLoggerBinder.class").hasMoreElements())
-                factory.getLogger(name);
+                return factory.getLogger(name);
         } catch (IOException ignored) {
 
         }
