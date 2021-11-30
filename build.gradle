@@ -7,9 +7,10 @@ allprojects {
         mavenCentral()
     }
 }
+apply plugin: 'maven'
 
-sourceCompatibility = "11"
-targetCompatibility = "11"
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 group 'me.nort3x'
 version '2.1.2'
@@ -17,8 +18,8 @@ version '2.1.2'
 
 
 dependencies {
-    implementation 'net.oneandone.reflections8:reflections8:0.11.5'
-    implementation 'org.slf4j:slf4j-api:1.7.25'
+    compile 'net.oneandone.reflections8:reflections8:0.11.5'
+    compile 'org.slf4j:slf4j-api:1.7.25'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.3.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.3.1'
@@ -48,6 +49,6 @@ artifacts {
 
 
 wrapper {
-    gradleVersion = "7.0.2"
+    gradleVersion = "6.1.1"
     distributionType = Wrapper.DistributionType.ALL
 }
