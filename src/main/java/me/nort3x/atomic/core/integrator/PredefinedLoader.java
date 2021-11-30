@@ -15,18 +15,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PredefinedLoader {
 
 
-    private static final ConcurrentHashMap<String,Value> values = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Value> values = new ConcurrentHashMap<>();
 
 
     public static void addDefinitionFile(InputStream inputStream) throws IOException {
         Properties p = new Properties();
         p.load(inputStream);
-        p.entrySet().forEach(entry->{
-            values.put(entry.getKey().toString(),new Value(entry.getKey().toString(),entry.getValue().toString()));
+        p.entrySet().forEach(entry -> {
+            values.put(entry.getKey().toString(), new Value(entry.getKey().toString(), entry.getValue().toString()));
         });
     }
 
-    private static Logger l = AtomicLogger.getInstance().getLogger(PredefinedLoader.class,Priority.IMPORTANT);
+    private static Logger l = AtomicLogger.getInstance().getLogger(PredefinedLoader.class, Priority.IMPORTANT);
 
     public static void setPredefinedValue(AtomicField f, Object obj) {
         if (!f.isPredefined()) {
@@ -41,7 +41,7 @@ public class PredefinedLoader {
             l.warn("Predefined key-value: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + " is [not Found] among scanned entry paths");
             return;
         }
-        f.setField(obj,value.readFor(f.getType()));
+        f.setField(obj, value.readFor(f.getType()));
     }
 
 
