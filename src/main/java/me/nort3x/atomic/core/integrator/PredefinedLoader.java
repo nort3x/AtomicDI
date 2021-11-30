@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,7 +33,10 @@ public class PredefinedLoader {
             l.warn("Predefined field Injector is called for AtomicField: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + "but its not annotated with Predefined");
         }
         String key = f.getCorrespondingField().getAnnotation(Predefined.class).value();
-        Value value = values.getOrDefault(key,null);
+        String value_env = System.getenv(key.toUpperCase(Locale.ROOT).replace(".", "_"));
+        Value value = value_env == null ? null : new Value(key, value_env);
+        if (value == null)
+            value = values.getOrDefault(key, null);
         if (value == null) {
             l.warn("Predefined key-value: " + f.getCorrespondingField().getDeclaringClass().getName() + "." + f.getCorrespondingField().getName() + " is [not Found] among scanned entry paths");
             return;
